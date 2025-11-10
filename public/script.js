@@ -94,6 +94,9 @@ function switchTab(tabId) {
         currentTab = tabIndex;
         showTab(currentTab);
     }
+    
+    // Permite navegação livre - não bloqueia
+    event.preventDefault();
 }
 
 function showTab(index) {
