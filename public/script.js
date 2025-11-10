@@ -1,0 +1,736 @@
+// ============================================
+// ESTADO DA APLICAÇÃO
+// ============================================
+let ordens = [];
+let currentMonth = new Date();
+let editingId = null;
+let itemCounter = 0;
+
+// ============================================
+// INICIALIZAÇÃO
+// ============================================
+document.addEventListener('DOMContentLoaded', () => {
+    loadFromLocalStorage();
+    updateDisplay();
+    checkOpenOrders(); // Verifica ordens abertas
+});
+
+// ============================================
+// LOCAL STORAGE
+// ============================================
+function loadFromLocalStorage() {
+    const stored = localStorage.getItem('ordens');
+    if (stored) {
+        ordens = JSON.parse(stored);
+    }
+}
+
+function saveToLocalStorage() {
+    localStorage.setItem('ordens', JSON.stringify(ordens));
+}
+
+// ============================================
+// NAVEGAÇÃO DE MÊS
+// ============================================
+function changeMonth(direction) {
+    currentMonth.setMonth(currentMonth.getMonth() + direction);
+    updateDisplay();
+}
+
+function updateMonthDisplay() {
+    const months = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 
+                    'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+    const monthName = months[currentMonth.getMonth()];
+    const year = currentMonth.getFullYear();
+    document.getElementById('currentMonth').textContent = `${monthName} ${year}`;
+}
+
+// ============================================
+// SISTEMA DE ABAS
+// ============================================
+function switchTab(tabId) {
+    // Remove active de todas as abas do formulário
+    document.querySelectorAll('#formModal .tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    document.querySelectorAll('#formModal .tab-content').forEach(content => {
+        content.classList.remove('active');
+    });
+    
+    // Ativa a aba clicada
+    const clickedBtn = event.target.closest('.tab-btn');
+    if (clickedBtn) {
+        clickedBtn.classList.add('active');
+    }
+    document.getElementById(tabId).classList.add('active');
+}
+
+function switchInfoTab(tabId) {
+    // Remove active de todas as abas do modal de info
+    document.querySelectorAll('#infoModal .tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    document.querySelectorAll('#infoModal .tab-content').forEach(content => {
+        content.classList.remove('active');
+    });
+    
+    // Ativa a aba clicada
+    const clickedBtn = event.target.closest('.tab-btn');
+    if (clickedBtn) {
+        clickedBtn.classList.add('active');
+    }
+    document.getElementById(tabId).classList.add('active');
+}
+
+// ============================================
+// MODAL DE FORMULÁRIO
+// ============================================
+function openFormModal() {
+    editingId = null;
+    document.getElementById('formTitle').textContent = 'Nova Ordem de Compra';
+    document.getElementById('submitText').textContent = 'Registrar Ordem';
+    document.getElementById('ordemForm').reset();
+    document.getElementById('editId').value = '';
+    
+    // Limpa itens e adiciona um novo
+    document.getElementById('itemsBody').innerHTML = '';
+    itemCounter = 0;
+    addItem();
+    
+    // Gera novo número de ordem
+    const nextNumber = getNextOrderNumber();
+    document.getElementById('numeroOrdem').value = nextNumber;
+    
+    setTodayDate();
+    
+    // Reseta para a primeira aba
+    document.querySelectorAll('#formModal .tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('#formModal .tab-content').forEach(content => content.classList.remove('active'));
+    document.querySelectorAll('#formModal .tab-btn')[0].classList.add('active');
+    document.getElementById('tab-geral').classList.add('active');
+    
+    document.getElementById('formModal').classList.add('show');
+}
+
+function closeFormModal() {
+    document.getElementById('formModal').classList.remove('show');
+}
+
+function setTodayDate() {
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('dataOrdem').value = today;
+}
+
+// ============================================
+// GESTÃO DE ITENS
+// ============================================
+function addItem() {
+    itemCounter++;
+    const tbody = document.getElementById('itemsBody');
+    const row = document.createElement('tr');
+    row.innerHTML = `
+        <td style="text-align: center;">${itemCounter}</td>
+        <td>
+            <textarea class="item-especificacao" placeholder="Descrição do item..." rows="2"></textarea>
+        </td>
+        <td>
+            <input type="number" class="item-qtd" min="0" step="0.01" value="1" onchange="calculateItemTotal(this)">
+        </td>
+        <td>
+            <input type="text" class="item-unid" value="UN" placeholder="UN">
+        </td>
+        <td>
+            <input type="number" class="item-valor" min="0" step="0.01" value="0" onchange="calculateItemTotal(this)">
+        </td>
+        <td>
+            <input type="text" class="item-total" readonly value="R$ 0,00">
+        </td>
+        <td class="item-actions">
+            <button type="button" class="danger small" onclick="removeItem(this)">Excluir</button>
+        </td>
+    `;
+    tbody.appendChild(row);
+}
+
+function removeItem(btn) {
+    const row = btn.closest('tr');
+    row.remove();
+    recalculateOrderTotal();
+    renumberItems();
+}
+
+function renumberItems() {
+    const rows = document.querySelectorAll('#itemsBody tr');
+    rows.forEach((row, index) => {
+        row.cells[0].textContent = index + 1;
+    });
+    itemCounter = rows.length;
+}
+
+function calculateItemTotal(input) {
+    const row = input.closest('tr');
+    const qtd = parseFloat(row.querySelector('.item-qtd').value) || 0;
+    const valor = parseFloat(row.querySelector('.item-valor').value) || 0;
+    const total = qtd * valor;
+    row.querySelector('.item-total').value = formatCurrency(total);
+    recalculateOrderTotal();
+}
+
+function recalculateOrderTotal() {
+    const totals = document.querySelectorAll('.item-total');
+    let sum = 0;
+    totals.forEach(input => {
+        const value = input.value.replace('R$', '').replace(/\./g, '').replace(',', '.').trim();
+        sum += parseFloat(value) || 0;
+    });
+    document.getElementById('valorTotalOrdem').value = formatCurrency(sum);
+}
+
+// ============================================
+// SUBMIT DO FORMULÁRIO
+// ============================================
+function handleSubmit(event) {
+    event.preventDefault();
+    
+    // Coleta os itens
+    const items = [];
+    const rows = document.querySelectorAll('#itemsBody tr');
+    rows.forEach((row, index) => {
+        items.push({
+            item: index + 1,
+            especificacao: row.querySelector('.item-especificacao').value,
+            quantidade: parseFloat(row.querySelector('.item-qtd').value) || 0,
+            unidade: row.querySelector('.item-unid').value,
+            valorUnitario: parseFloat(row.querySelector('.item-valor').value) || 0,
+            valorTotal: row.querySelector('.item-total').value
+        });
+    });
+    
+    const formData = {
+        id: editingId || Date.now().toString(),
+        numeroOrdem: document.getElementById('numeroOrdem').value,
+        responsavel: document.getElementById('responsavel').value,
+        dataOrdem: document.getElementById('dataOrdem').value,
+        razaoSocial: document.getElementById('razaoSocial').value,
+        nomeFantasia: document.getElementById('nomeFantasia').value,
+        cnpj: document.getElementById('cnpj').value,
+        enderecoFornecedor: document.getElementById('enderecoFornecedor').value,
+        site: document.getElementById('site').value,
+        contato: document.getElementById('contato').value,
+        telefone: document.getElementById('telefone').value,
+        email: document.getElementById('email').value,
+        items: items,
+        valorTotal: document.getElementById('valorTotalOrdem').value,
+        ipi: document.getElementById('ipi').value,
+        st: document.getElementById('st').value,
+        frete: document.getElementById('frete').value,
+        localEntrega: document.getElementById('localEntrega').value,
+        prazoEntrega: document.getElementById('prazoEntrega').value,
+        transporte: document.getElementById('transporte').value,
+        formaPagamento: document.getElementById('formaPagamento').value,
+        prazoPagamento: document.getElementById('prazoPagamento').value,
+        dadosBancarios: document.getElementById('dadosBancarios').value,
+        status: 'aberta'
+    };
+    
+    if (editingId) {
+        const index = ordens.findIndex(o => o.id === editingId);
+        ordens[index] = formData;
+        showToast('Ordem atualizada com sucesso!', 'success');
+    } else {
+        ordens.push(formData);
+        showToast('Ordem criada com sucesso!', 'success');
+    }
+    
+    saveToLocalStorage();
+    updateDisplay();
+    closeFormModal();
+}
+
+// ============================================
+// EDIÇÃO
+// ============================================
+function editOrdem(id) {
+    const ordem = ordens.find(o => o.id === id);
+    if (!ordem) return;
+    
+    editingId = id;
+    document.getElementById('formTitle').textContent = 'Editar Ordem de Compra';
+    document.getElementById('submitText').textContent = 'Atualizar Ordem';
+    
+    // Preenche campos básicos
+    document.getElementById('editId').value = ordem.id;
+    document.getElementById('numeroOrdem').value = ordem.numeroOrdem;
+    document.getElementById('responsavel').value = ordem.responsavel;
+    document.getElementById('dataOrdem').value = ordem.dataOrdem;
+    document.getElementById('razaoSocial').value = ordem.razaoSocial;
+    document.getElementById('nomeFantasia').value = ordem.nomeFantasia || '';
+    document.getElementById('cnpj').value = ordem.cnpj;
+    document.getElementById('enderecoFornecedor').value = ordem.enderecoFornecedor || '';
+    document.getElementById('site').value = ordem.site || '';
+    document.getElementById('contato').value = ordem.contato || '';
+    document.getElementById('telefone').value = ordem.telefone || '';
+    document.getElementById('email').value = ordem.email || '';
+    document.getElementById('ipi').value = ordem.ipi || '';
+    document.getElementById('st').value = ordem.st || '';
+    document.getElementById('frete').value = ordem.frete || '';
+    document.getElementById('localEntrega').value = ordem.localEntrega || '';
+    document.getElementById('prazoEntrega').value = ordem.prazoEntrega || '';
+    document.getElementById('transporte').value = ordem.transporte || '';
+    document.getElementById('formaPagamento').value = ordem.formaPagamento;
+    document.getElementById('prazoPagamento').value = ordem.prazoPagamento;
+    document.getElementById('dadosBancarios').value = ordem.dadosBancarios || '';
+    
+    // Preenche itens
+    document.getElementById('itemsBody').innerHTML = '';
+    itemCounter = 0;
+    ordem.items.forEach(item => {
+        addItem();
+        const row = document.querySelector('#itemsBody tr:last-child');
+        row.querySelector('.item-especificacao').value = item.especificacao;
+        row.querySelector('.item-qtd').value = item.quantidade;
+        row.querySelector('.item-unid').value = item.unidade;
+        row.querySelector('.item-valor').value = item.valorUnitario;
+        row.querySelector('.item-total').value = item.valorTotal;
+    });
+    
+    recalculateOrderTotal();
+    
+    // Reseta para a primeira aba
+    document.querySelectorAll('#formModal .tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('#formModal .tab-content').forEach(content => content.classList.remove('active'));
+    document.querySelectorAll('#formModal .tab-btn')[0].classList.add('active');
+    document.getElementById('tab-geral').classList.add('active');
+    
+    document.getElementById('formModal').classList.add('show');
+}
+
+// ============================================
+// EXCLUSÃO
+// ============================================
+function deleteOrdem(id) {
+    if (confirm('Tem certeza que deseja excluir esta ordem?')) {
+        ordens = ordens.filter(o => o.id !== id);
+        saveToLocalStorage();
+        updateDisplay();
+        showToast('Ordem excluída com sucesso!', 'success');
+    }
+}
+
+// ============================================
+// TOGGLE STATUS
+// ============================================
+function toggleStatus(id) {
+    const ordem = ordens.find(o => o.id === id);
+    if (ordem) {
+        ordem.status = ordem.status === 'aberta' ? 'fechada' : 'aberta';
+        saveToLocalStorage();
+        updateDisplay();
+        showToast(`Ordem marcada como ${ordem.status}!`, 'success');
+    }
+}
+
+// ============================================
+// VISUALIZAÇÃO
+// ============================================
+function viewOrdem(id) {
+    const ordem = ordens.find(o => o.id === id);
+    if (!ordem) return;
+    
+    document.getElementById('modalNumero').textContent = ordem.numeroOrdem;
+    
+    // Tab: Geral
+    document.getElementById('info-tab-geral').innerHTML = `
+        <div class="info-section">
+            <h4>Informações Gerais</h4>
+            <p><strong>Responsável:</strong> ${ordem.responsavel}</p>
+            <p><strong>Data:</strong> ${formatDate(ordem.dataOrdem)}</p>
+            <p><strong>Status:</strong> <span class="badge ${ordem.status}">${ordem.status.toUpperCase()}</span></p>
+        </div>
+    `;
+    
+    // Tab: Fornecedor
+    document.getElementById('info-tab-fornecedor').innerHTML = `
+        <div class="info-section">
+            <h4>Dados do Fornecedor</h4>
+            <p><strong>Razão Social:</strong> ${ordem.razaoSocial}</p>
+            ${ordem.nomeFantasia ? `<p><strong>Nome Fantasia:</strong> ${ordem.nomeFantasia}</p>` : ''}
+            <p><strong>CNPJ:</strong> ${ordem.cnpj}</p>
+            ${ordem.enderecoFornecedor ? `<p><strong>Endereço:</strong> ${ordem.enderecoFornecedor}</p>` : ''}
+            ${ordem.site ? `<p><strong>Site:</strong> ${ordem.site}</p>` : ''}
+            ${ordem.contato ? `<p><strong>Contato:</strong> ${ordem.contato}</p>` : ''}
+            ${ordem.telefone ? `<p><strong>Telefone:</strong> ${ordem.telefone}</p>` : ''}
+            ${ordem.email ? `<p><strong>E-mail:</strong> ${ordem.email}</p>` : ''}
+        </div>
+    `;
+    
+    // Tab: Pedido
+    document.getElementById('info-tab-pedido').innerHTML = `
+        <div class="info-section">
+            <h4>Itens do Pedido</h4>
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; margin-top: 0.5rem;">
+                    <thead>
+                        <tr>
+                            <th>Item</th>
+                            <th>Especificação</th>
+                            <th>QTD</th>
+                            <th>Unid</th>
+                            <th>Valor UN</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${ordem.items.map(item => `
+                            <tr>
+                                <td>${item.item}</td>
+                                <td>${item.especificacao}</td>
+                                <td>${item.quantidade}</td>
+                                <td>${item.unidade}</td>
+                                <td>R$ ${item.valorUnitario.toFixed(2)}</td>
+                                <td>${item.valorTotal}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+            <p style="margin-top: 1rem; font-size: 1.1rem;"><strong>Valor Total:</strong> ${ordem.valorTotal}</p>
+            ${ordem.ipi ? `<p><strong>IPI:</strong> ${ordem.ipi}</p>` : ''}
+            ${ordem.st ? `<p><strong>ST:</strong> ${ordem.st}</p>` : ''}
+            ${ordem.frete ? `<p><strong>Frete:</strong> ${ordem.frete}</p>` : ''}
+        </div>
+    `;
+    
+    // Tab: Entrega
+    document.getElementById('info-tab-entrega').innerHTML = `
+        <div class="info-section">
+            <h4>Informações de Entrega</h4>
+            ${ordem.localEntrega ? `<p><strong>Local de Entrega:</strong> ${ordem.localEntrega}</p>` : ''}
+            ${ordem.prazoEntrega ? `<p><strong>Prazo de Entrega:</strong> ${ordem.prazoEntrega}</p>` : ''}
+            ${ordem.transporte ? `<p><strong>Transporte:</strong> ${ordem.transporte}</p>` : ''}
+        </div>
+    `;
+    
+    // Tab: Pagamento
+    document.getElementById('info-tab-pagamento').innerHTML = `
+        <div class="info-section">
+            <h4>Dados de Pagamento</h4>
+            <p><strong>Forma de Pagamento:</strong> ${ordem.formaPagamento}</p>
+            <p><strong>Prazo de Pagamento:</strong> ${ordem.prazoPagamento}</p>
+            ${ordem.dadosBancarios ? `<p><strong>Dados Bancários:</strong> ${ordem.dadosBancarios}</p>` : ''}
+        </div>
+    `;
+    
+    // Reseta para a primeira aba
+    document.querySelectorAll('#infoModal .tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('#infoModal .tab-content').forEach(content => content.classList.remove('active'));
+    document.querySelectorAll('#infoModal .tab-btn')[0].classList.add('active');
+    document.getElementById('info-tab-geral').classList.add('active');
+    
+    document.getElementById('infoModal').classList.add('show');
+}
+
+function closeInfoModal() {
+    document.getElementById('infoModal').classList.remove('show');
+}
+
+// ============================================
+// FILTROS
+// ============================================
+function filterOrdens() {
+    updateDisplay();
+}
+
+function clearFilters() {
+    document.getElementById('search').value = '';
+    document.getElementById('filterResponsavel').value = '';
+    document.getElementById('filterStatus').value = '';
+    updateDisplay();
+}
+
+// ============================================
+// ATUALIZAÇÃO DA TELA
+// ============================================
+function updateDisplay() {
+    updateMonthDisplay();
+    updateDashboard();
+    updateTable();
+}
+
+function updateDashboard() {
+    const monthOrdens = getOrdensForCurrentMonth();
+    const totalFechadas = monthOrdens.filter(o => o.status === 'fechada').length;
+    const totalAbertas = monthOrdens.filter(o => o.status === 'aberta').length;
+    
+    // Total de ordens começa em 1226 (ordens anteriores) + ordens registradas no sistema
+    document.getElementById('totalOrdens').textContent = 1226 + ordens.length;
+    document.getElementById('totalFechadas').textContent = totalFechadas;
+    document.getElementById('totalAbertas').textContent = totalAbertas;
+}
+
+function updateTable() {
+    const container = document.getElementById('ordensContainer');
+    let filteredOrdens = getOrdensForCurrentMonth();
+    
+    // Aplica filtros
+    const search = document.getElementById('search').value.toLowerCase();
+    const filterResp = document.getElementById('filterResponsavel').value;
+    const filterStatus = document.getElementById('filterStatus').value;
+    
+    if (search) {
+        filteredOrdens = filteredOrdens.filter(o => 
+            o.numeroOrdem.toLowerCase().includes(search) ||
+            o.razaoSocial.toLowerCase().includes(search) ||
+            o.responsavel.toLowerCase().includes(search)
+        );
+    }
+    
+    if (filterResp) {
+        filteredOrdens = filteredOrdens.filter(o => o.responsavel === filterResp);
+    }
+    
+    if (filterStatus) {
+        filteredOrdens = filteredOrdens.filter(o => o.status === filterStatus);
+    }
+    
+    if (filteredOrdens.length === 0) {
+        container.innerHTML = `
+            <tr>
+                <td colspan="8" style="text-align: center; padding: 2rem;">
+                    Nenhuma ordem encontrada
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    // Ordena por número de ordem (decrescente - maior primeiro)
+    filteredOrdens.sort((a, b) => {
+        const numA = parseInt(a.numeroOrdem.split('-')[1]);
+        const numB = parseInt(b.numeroOrdem.split('-')[1]);
+        return numB - numA;
+    });
+    
+    container.innerHTML = filteredOrdens.map(ordem => `
+        <tr class="${ordem.status}">
+            <td style="text-align: center;">
+                <button class="check-btn ${ordem.status === 'fechada' ? 'checked' : ''}" 
+                        onclick="toggleStatus('${ordem.id}')" 
+                        title="${ordem.status === 'fechada' ? 'Marcar como aberta' : 'Marcar como fechada'}">
+                    ${ordem.status === 'fechada' ? '✓' : '✓'}
+                </button>
+            </td>
+            <td><strong>${ordem.numeroOrdem}</strong></td>
+            <td>${ordem.responsavel}</td>
+            <td>${ordem.razaoSocial}</td>
+            <td>${formatDate(ordem.dataOrdem)}</td>
+            <td><strong>${ordem.valorTotal}</strong></td>
+            <td>
+                <span class="badge ${ordem.status}">${ordem.status.toUpperCase()}</span>
+            </td>
+            <td>
+                <div class="actions">
+                    <button class="small" onclick="viewOrdem('${ordem.id}')" title="Ver detalhes">
+                        Ver
+                    </button>
+                    <button class="small secondary" onclick="editOrdem('${ordem.id}')" title="Editar">
+                        Editar
+                    </button>
+                    <button class="small danger" onclick="deleteOrdem('${ordem.id}')" title="Excluir">
+                        Excluir
+                    </button>
+                </div>
+            </td>
+        </tr>
+    `).join('');
+}
+
+// ============================================
+// UTILIDADES
+// ============================================
+function getOrdensForCurrentMonth() {
+    return ordens.filter(ordem => {
+        const ordemDate = new Date(ordem.dataOrdem);
+        return ordemDate.getMonth() === currentMonth.getMonth() &&
+               ordemDate.getFullYear() === currentMonth.getFullYear();
+    });
+}
+
+function getNextOrderNumber() {
+    const year = new Date().getFullYear();
+    const existingNumbers = ordens
+        .map(o => o.numeroOrdem)
+        .filter(n => n.startsWith(year.toString()))
+        .map(n => parseInt(n.split('-')[1]))
+        .filter(n => !isNaN(n));
+    
+    // Inicia em 1226 se não houver ordens, senão usa o próximo número
+    const nextNum = existingNumbers.length > 0 ? Math.max(...existingNumbers) + 1 : 1226;
+    return `${year}-${String(nextNum).padStart(4, '0')}`;
+}
+
+function formatDate(dateString) {
+    const date = new Date(dateString + 'T00:00:00');
+    return date.toLocaleDateString('pt-BR');
+}
+
+function formatCurrency(value) {
+    return `R$ ${parseFloat(value).toFixed(2).replace('.', ',')}`;
+}
+
+function showToast(message, type = 'success') {
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.remove();
+    }, 3000);
+}
+
+// ============================================
+// GERAÇÃO DE PDF
+// ============================================
+function checkOpenOrders() {
+    const ordensAbertas = ordens.filter(o => o.status === 'aberta');
+    
+    if (ordensAbertas.length > 0) {
+        // Ordena por número de ordem (decrescente)
+        ordensAbertas.sort((a, b) => {
+            const numA = parseInt(a.numeroOrdem.split('-')[1]);
+            const numB = parseInt(b.numeroOrdem.split('-')[1]);
+            return numB - numA;
+        });
+        
+        showOpenOrdersModal(ordensAbertas);
+    }
+}
+
+function showOpenOrdersModal(ordensAbertas) {
+    const modal = document.getElementById('openOrdersModal');
+    const tbody = document.getElementById('openOrdersTableBody');
+    
+    tbody.innerHTML = ordensAbertas.map(ordem => `
+        <tr onclick="viewOrdem('${ordem.id}')" style="cursor: pointer;">
+            <td><strong>${ordem.numeroOrdem}</strong></td>
+            <td>${ordem.razaoSocial}</td>
+            <td>${ordem.responsavel}</td>
+            <td>${formatDate(ordem.dataOrdem)}</td>
+            <td><strong>${ordem.valorTotal}</strong></td>
+        </tr>
+    `).join('');
+    
+    document.getElementById('openOrdersCount').textContent = ordensAbertas.length;
+    modal.classList.add('show');
+}
+
+function closeOpenOrdersModal() {
+    document.getElementById('openOrdersModal').classList.remove('show');
+}
+
+function generatePDF() {
+    const modalNumero = document.getElementById('modalNumero').textContent;
+    const ordem = ordens.find(o => o.numeroOrdem === modalNumero);
+    
+    if (!ordem) {
+        showToast('Ordem não encontrada!', 'error');
+        return;
+    }
+    
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    
+    // Configurações
+    let y = 20;
+    const margin = 20;
+    const pageWidth = doc.internal.pageSize.width;
+    
+    // Título
+    doc.setFontSize(18);
+    doc.setTextColor(204, 112, 0);
+    doc.text('ORDEM DE COMPRA', pageWidth / 2, y, { align: 'center' });
+    
+    y += 10;
+    doc.setFontSize(12);
+    doc.text(`Nº ${ordem.numeroOrdem}`, pageWidth / 2, y, { align: 'center' });
+    
+    y += 15;
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(10);
+    
+    // Informações gerais
+    doc.setFont(undefined, 'bold');
+    doc.text('Responsável:', margin, y);
+    doc.setFont(undefined, 'normal');
+    doc.text(ordem.responsavel, margin + 35, y);
+    
+    doc.setFont(undefined, 'bold');
+    doc.text('Data:', pageWidth - margin - 60, y);
+    doc.setFont(undefined, 'normal');
+    doc.text(formatDate(ordem.dataOrdem), pageWidth - margin - 35, y);
+    
+    y += 10;
+    
+    // Fornecedor
+    doc.setFontSize(12);
+    doc.setFont(undefined, 'bold');
+    doc.text('FORNECEDOR', margin, y);
+    y += 7;
+    
+    doc.setFontSize(10);
+    doc.setFont(undefined, 'normal');
+    doc.text(`Razão Social: ${ordem.razaoSocial}`, margin, y);
+    y += 5;
+    doc.text(`CNPJ: ${ordem.cnpj}`, margin, y);
+    y += 5;
+    if (ordem.contato) {
+        doc.text(`Contato: ${ordem.contato}`, margin, y);
+        y += 5;
+    }
+    if (ordem.telefone) {
+        doc.text(`Telefone: ${ordem.telefone}`, margin, y);
+        y += 5;
+    }
+    
+    y += 10;
+    
+    // Itens
+    doc.setFontSize(12);
+    doc.setFont(undefined, 'bold');
+    doc.text('ITENS DO PEDIDO', margin, y);
+    y += 7;
+    
+    doc.setFontSize(9);
+    ordem.items.forEach(item => {
+        if (y > 270) {
+            doc.addPage();
+            y = 20;
+        }
+        doc.text(`${item.item}. ${item.especificacao}`, margin, y);
+        y += 5;
+        doc.text(`   Qtd: ${item.quantidade} ${item.unidade} | Valor UN: R$ ${item.valorUnitario.toFixed(2)} | Total: ${item.valorTotal}`, margin, y);
+        y += 7;
+    });
+    
+    y += 5;
+    doc.setFontSize(11);
+    doc.setFont(undefined, 'bold');
+    doc.text(`VALOR TOTAL: ${ordem.valorTotal}`, margin, y);
+    
+    y += 15;
+    
+    // Pagamento
+    doc.setFontSize(12);
+    doc.text('PAGAMENTO', margin, y);
+    y += 7;
+    doc.setFontSize(10);
+    doc.setFont(undefined, 'normal');
+    doc.text(`Forma: ${ordem.formaPagamento}`, margin, y);
+    y += 5;
+    doc.text(`Prazo: ${ordem.prazoPagamento}`, margin, y);
+    
+    // Salvar PDF
+    doc.save(`Ordem_${ordem.numeroOrdem}.pdf`);
+    showToast('PDF gerado com sucesso!', 'success');
+}
