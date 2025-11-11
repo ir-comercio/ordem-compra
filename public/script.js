@@ -746,22 +746,22 @@ function generatePDF() {
     doc.setFont(undefined, 'bold');
     doc.text(`${ordem.razaoSocial}`, margin, y);
 
-    y += lineHeight;
+    y += lineHeight + 1;
     doc.setFontSize(11);
     doc.setFont(undefined, 'normal');
     doc.text(`${ordem.nomeFantasia}`, margin, y);
 
-     y += lineHeight;
+     y += lineHeight + 1;
     doc.setFontSize(11);
     doc.setFont(undefined, 'normal');
     doc.text(`${ordem.cnpj}`, margin, y);
 
-     y += lineHeight;
+    y += lineHeight + 1;
     doc.setFontSize(11);
     doc.setFont(undefined, 'normal');
     doc.text(`${ordem.enderecoFornecedor}`, margin, y);
 
-    y += lineHeight;
+    y += lineHeight + 1;
     doc.setFontSize(11);
     doc.setFont(undefined, 'normal');
     doc.text(`${ordem.contato}`, margin, y);
@@ -771,7 +771,7 @@ function generatePDF() {
     doc.setFont(undefined, 'normal');
     doc.text(`${ordem.telefone}`, margin, y);
 
-    y += lineHeight;
+    y += lineHeight + 1;
     doc.setFontSize(11);
     doc.setFont(undefined, 'normal');
     doc.text(`${ordem.email}`, margin, y);
