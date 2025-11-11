@@ -775,7 +775,8 @@ function generatePDF() {
     doc.setFontSize(11);
     doc.setFont(undefined, 'normal');
     doc.text(`${ordem.email}`, margin, y);
-    ];
+    
+     y += 10;
     
     // ===== ITENS DO PEDIDO - TABELA =====
     doc.setFontSize(11);
