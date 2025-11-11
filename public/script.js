@@ -1018,7 +1018,7 @@ function generatePDFForOrdem(ordem) {
     doc.text('PRAZO DE ENTREGA:', margin, y);
     doc.setFont(undefined, 'normal');
     doc.setFontSize(11);
-    doc.text(ordem.prazoEntrega, margin + 50, y);
+    doc.text(ordem.prazoEntrega, margin + 42, y);
     
     doc.setFont(undefined, 'bold');
     doc.setFontSize(11);
