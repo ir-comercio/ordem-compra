@@ -711,17 +711,23 @@ function generatePDFForOrdem(ordem) {
     doc.text('I.R. COMERCIO E MATERIAIS ELÉTRICOS LTDA', margin, y);
     
     y += lineHeight;
+    doc.setFontSize(11);
     doc.setFont(undefined, 'normal');
-    doc.setFontSize(9);
     doc.text('CNPJ: 33.149.502/0001-38  |  IE: 083.780.74-2', margin, y);
     
     y += lineHeight;
+    doc.setFontSize(11);
+    doc.setFont(undefined, 'normal');
     doc.text('Rua Tadorna nº 472, sala 2', margin, y);
     
     y += lineHeight;
+    doc.setFontSize(11);
+    doc.setFont(undefined, 'normal');
     doc.text('Novo Horizonte - Serra/ES  |  CEP: 29.163-318', margin, y);
     
     y += lineHeight;
+    doc.setFontSize(11);
+    doc.setFont(undefined, 'normal');
     doc.text('Telefax: (27) 3209-4291  |  E-mail: comercial.ircomercio@gmail.com', margin, y);
     
     y += 10;
@@ -973,39 +979,32 @@ function generatePDFForOrdem(ordem) {
     doc.setFont(undefined, 'bold');
     doc.text(`Valor Total: ${ordem.valorTotal}`, margin, y);
     
-    y += 6;
-    doc.setFontSize(10);
-    doc.setFont(undefined, 'bold');
-    doc.text('Frete: ', margin, y);
-    doc.setFont(undefined, 'normal');
-    doc.text(ordem.frete, margin + 15, y);
-    
     y += 10;
     
     // LOCAL DE ENTREGA (FIXO)
-    doc.setFontSize(10);
+    doc.setFontSize(11);
     doc.setFont(undefined, 'bold');
     doc.text('LOCAL DE ENTREGA:', margin, y);
     y += 5;
+    doc.setFontSize(11);
     doc.setFont(undefined, 'normal');
-    doc.setFontSize(9);
     doc.text('Rua Tadorna nº 472, sala 2, Novo Horizonte - Serra/ES  |  CEP: 29.163-318', margin, y);
     
     y += 8;
     
     // PRAZO E FRETE
-    doc.setFontSize(10);
+    doc.setFontSize(11);
     doc.setFont(undefined, 'bold');
     doc.text('PRAZO DE ENTREGA:', margin, y);
     doc.setFont(undefined, 'normal');
-    doc.setFontSize(9);
+    doc.setFontSize(11);
     doc.text(ordem.prazoEntrega, margin + 38, y);
     
     doc.setFont(undefined, 'bold');
     doc.setFontSize(10);
     doc.text('FRETE:', pageWidth - margin - 35, y);
     doc.setFont(undefined, 'normal');
-    doc.setFontSize(9);
+    doc.setFontSize(11);
     doc.text(ordem.frete, pageWidth - margin - 20, y);
     
     y += 10;
@@ -1016,15 +1015,19 @@ function generatePDFForOrdem(ordem) {
     doc.text('DADOS DO PAGAMENTO', margin, y);
     
     y += 6;
-    doc.setFontSize(9);
+    doc.setFontSize(11);
     doc.setFont(undefined, 'normal');
     doc.text(`Forma de Pagamento: ${ordem.formaPagamento}`, margin, y);
     
     y += 5;
+    doc.setFontSize(11);
+    doc.setFont(undefined, 'normal');
     doc.text(`Prazo de Pagamento: ${ordem.prazoPagamento}`, margin, y);
     
     if (ordem.dadosBancarios) {
         y += 5;
+        doc.setFontSize(11);
+    doc.setFont(undefined, 'normal');
         doc.text(`Dados Bancários: ${ordem.dadosBancarios}`, margin, y);
     }
     
