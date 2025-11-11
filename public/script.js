@@ -975,7 +975,7 @@ function generatePDFForOrdem(ordem) {
     // VALOR TOTAL E FRETE
     doc.setFontSize(11);
     doc.setFont(undefined, 'bold');
-    doc.text(`Valor Total: ${ordem.valorTotal}`, margin, y);
+    doc.text(`VALOR TOTAL: ${ordem.valorTotal}`, margin, y);
     
     y += 10;
     
