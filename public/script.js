@@ -699,7 +699,7 @@ function generatePDF() {
     // ===== CABEÇALHO =====
     doc.setFontSize(18);
     doc.setFont(undefined, 'bold');
-    doc.setTextColor(204, 112, 0);
+    doc.setTextColor(0, 0, 0);
     doc.text('ORDEM DE COMPRA', pageWidth / 2, y, { align: 'center' });
     
     y += 8;
@@ -737,6 +737,7 @@ function generatePDF() {
     
     // ===== DADOS DO FORNECEDOR - TABELA =====
     doc.setFontSize(11);
+    doc.setTextColor(0, 0, 0);
     doc.setFont(undefined, 'bold');
     doc.text('DADOS DO FORNECEDOR', margin, y);
     
