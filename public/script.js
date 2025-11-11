@@ -1006,7 +1006,7 @@ function generatePDFForOrdem(ordem) {
     doc.setFont(undefined, 'normal');
     doc.text('Rua Tadorna nº 472, sala 2, Novo Horizonte - Serra/ES  |  CEP: 29.163-318', margin, y);
     
-    y += 8;
+    y += 10;
     
     // PRAZO E FRETE
     if (y > doc.internal.pageSize.height - 60) {
