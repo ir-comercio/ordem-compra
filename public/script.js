@@ -94,7 +94,7 @@ function switchTab(tabId) {
         currentTab = tabIndex;
         showTab(currentTab);
     }
-
+    
     // Permite navegação livre - não bloqueia
     event.preventDefault();
 }
@@ -107,11 +107,11 @@ function showTab(index) {
     document.querySelectorAll('#formModal .tab-content').forEach(content => {
         content.classList.remove('active');
     });
-
+    
     // Ativa a aba atual
     document.querySelectorAll('#formModal .tab-btn')[index].classList.add('active');
     document.getElementById(tabs[index]).classList.add('active');
-
+    
     updateNavigationButtons();
 }
 
@@ -135,14 +135,14 @@ function previousTab() {
 function updateNavigationButtons() {
     const btnVoltar = document.getElementById('btnVoltar');
     const btnProximo = document.getElementById('btnProximo');
-
+    
     // Botão Voltar: não aparece na primeira aba
     if (currentTab === 0) {
         btnVoltar.style.display = 'none';
     } else {
         btnVoltar.style.display = 'inline-flex';
     }
-
+    
     // Botão Próximo/Registrar: muda texto na última aba
     if (currentTab === tabs.length - 1) {
         btnProximo.textContent = editingId ? 'Atualizar Ordem' : 'Registrar Ordem';
@@ -163,7 +163,7 @@ function switchInfoTab(tabId) {
     document.querySelectorAll('#infoModal .tab-content').forEach(content => {
         content.classList.remove('active');
     });
-
+    
     // Ativa a aba clicada
     const clickedBtn = event.target.closest('.tab-btn');
     if (clickedBtn) {
@@ -181,21 +181,21 @@ function openFormModal() {
     document.getElementById('formTitle').textContent = 'Nova Ordem de Compra';
     document.getElementById('ordemForm').reset();
     document.getElementById('editId').value = '';
-
+    
     // Limpa itens e adiciona um novo
     document.getElementById('itemsBody').innerHTML = '';
     itemCounter = 0;
     addItem();
-
+    
     // Gera novo número de ordem
     const nextNumber = getNextOrderNumber();
     document.getElementById('numeroOrdem').value = nextNumber;
-
+    
     setTodayDate();
-
+    
     // Reseta para a primeira aba
     showTab(0);
-
+    
     document.getElementById('formModal').classList.add('show');
 }
 
@@ -278,7 +278,7 @@ function recalculateOrderTotal() {
 // ============================================
 function handleSubmit(event) {
     event.preventDefault();
-
+    
     // Coleta os itens
     const items = [];
     const rows = document.querySelectorAll('#itemsBody tr');
@@ -292,9 +292,9 @@ function handleSubmit(event) {
             valorTotal: row.querySelector('.item-total').value
         });
     });
-
+    
     const timestamp = Date.now();
-
+    
     const formData = {
         id: editingId || timestamp.toString(),
         numeroOrdem: document.getElementById('numeroOrdem').value,
@@ -322,7 +322,7 @@ function handleSubmit(event) {
         status: 'aberta',
         timestamp: timestamp // Usado para ordenação
     };
-
+    
     if (editingId) {
         const index = ordens.findIndex(o => o.id === editingId);
         // Preserva o timestamp original ao editar
@@ -333,7 +333,7 @@ function handleSubmit(event) {
         ordens.push(formData);
         showToast('Ordem criada com sucesso!', 'success');
     }
-
+    
     saveToLocalStorage();
     updateDisplay();
     closeFormModal();
@@ -345,11 +345,11 @@ function handleSubmit(event) {
 function editOrdem(id) {
     const ordem = ordens.find(o => o.id === id);
     if (!ordem) return;
-
+    
     editingId = id;
     currentTab = 0;
     document.getElementById('formTitle').textContent = 'Editar Ordem de Compra';
-
+    
     // Preenche campos básicos
     document.getElementById('editId').value = ordem.id;
     document.getElementById('numeroOrdem').value = ordem.numeroOrdem;
@@ -372,7 +372,7 @@ function editOrdem(id) {
     document.getElementById('formaPagamento').value = ordem.formaPagamento;
     document.getElementById('prazoPagamento').value = ordem.prazoPagamento;
     document.getElementById('dadosBancarios').value = ordem.dadosBancarios || '';
-
+    
     // Preenche itens
     document.getElementById('itemsBody').innerHTML = '';
     itemCounter = 0;
@@ -385,12 +385,12 @@ function editOrdem(id) {
         row.querySelector('.item-valor').value = item.valorUnitario;
         row.querySelector('.item-total').value = item.valorTotal;
     });
-
+    
     recalculateOrderTotal();
-
+    
     // Reseta para a primeira aba
     showTab(0);
-
+    
     document.getElementById('formModal').classList.add('show');
 }
 
@@ -425,9 +425,9 @@ function toggleStatus(id) {
 function viewOrdem(id) {
     const ordem = ordens.find(o => o.id === id);
     if (!ordem) return;
-
+    
     document.getElementById('modalNumero').textContent = ordem.numeroOrdem;
-
+    
     // Tab: Geral
     document.getElementById('info-tab-geral').innerHTML = `
         <div class="info-section">
@@ -437,7 +437,7 @@ function viewOrdem(id) {
             <p><strong>Status:</strong> <span class="badge ${ordem.status}">${ordem.status.toUpperCase()}</span></p>
         </div>
     `;
-
+    
     // Tab: Fornecedor
     document.getElementById('info-tab-fornecedor').innerHTML = `
         <div class="info-section">
@@ -452,7 +452,7 @@ function viewOrdem(id) {
             ${ordem.email ? `<p><strong>E-mail:</strong> ${ordem.email}</p>` : ''}
         </div>
     `;
-
+    
     // Tab: Pedido
     document.getElementById('info-tab-pedido').innerHTML = `
         <div class="info-section">
@@ -489,7 +489,7 @@ function viewOrdem(id) {
             ${ordem.frete ? `<p><strong>Frete:</strong> ${ordem.frete}</p>` : ''}
         </div>
     `;
-
+    
     // Tab: Entrega
     document.getElementById('info-tab-entrega').innerHTML = `
         <div class="info-section">
@@ -499,7 +499,7 @@ function viewOrdem(id) {
             ${ordem.transporte ? `<p><strong>Transporte:</strong> ${ordem.transporte}</p>` : ''}
         </div>
     `;
-
+    
     // Tab: Pagamento
     document.getElementById('info-tab-pagamento').innerHTML = `
         <div class="info-section">
@@ -509,13 +509,13 @@ function viewOrdem(id) {
             ${ordem.dadosBancarios ? `<p><strong>Dados Bancários:</strong> ${ordem.dadosBancarios}</p>` : ''}
         </div>
     `;
-
+    
     // Reseta para a primeira aba
     document.querySelectorAll('#infoModal .tab-btn').forEach(btn => btn.classList.remove('active'));
     document.querySelectorAll('#infoModal .tab-content').forEach(content => content.classList.remove('active'));
     document.querySelectorAll('#infoModal .tab-btn')[0].classList.add('active');
     document.getElementById('info-tab-geral').classList.add('active');
-
+    
     document.getElementById('infoModal').classList.add('show');
 }
 
@@ -550,7 +550,7 @@ function updateDashboard() {
     const monthOrdens = getOrdensForCurrentMonth();
     const totalFechadas = monthOrdens.filter(o => o.status === 'fechada').length;
     const totalAbertas = monthOrdens.filter(o => o.status === 'aberta').length;
-
+    
     // Total de ordens começa em 1249 + ordens registradas no sistema
     document.getElementById('totalOrdens').textContent = 1249 + ordens.length;
     document.getElementById('totalFechadas').textContent = totalFechadas;
@@ -560,12 +560,12 @@ function updateDashboard() {
 function updateTable() {
     const container = document.getElementById('ordensContainer');
     let filteredOrdens = getOrdensForCurrentMonth();
-
+    
     // Aplica filtros
     const search = document.getElementById('search').value.toLowerCase();
     const filterResp = document.getElementById('filterResponsavel').value;
     const filterStatus = document.getElementById('filterStatus').value;
-
+    
     if (search) {
         filteredOrdens = filteredOrdens.filter(o => 
             o.numeroOrdem.toLowerCase().includes(search) ||
@@ -573,15 +573,15 @@ function updateTable() {
             o.responsavel.toLowerCase().includes(search)
         );
     }
-
+    
     if (filterResp) {
         filteredOrdens = filteredOrdens.filter(o => o.responsavel === filterResp);
     }
-
+    
     if (filterStatus) {
         filteredOrdens = filteredOrdens.filter(o => o.status === filterStatus);
     }
-
+    
     if (filteredOrdens.length === 0) {
         container.innerHTML = `
             <tr>
@@ -592,14 +592,14 @@ function updateTable() {
         `;
         return;
     }
-
+    
     // Ordena por número de ordem (crescente - menor primeiro)
     filteredOrdens.sort((a, b) => {
         const numA = parseInt(a.numeroOrdem.split('-')[1]);
         const numB = parseInt(b.numeroOrdem.split('-')[1]);
         return numA - numB;
     });
-
+    
     container.innerHTML = filteredOrdens.map(ordem => `
         <tr class="${ordem.status}">
             <td style="text-align: center;">
@@ -652,7 +652,7 @@ function getNextOrderNumber() {
         .filter(n => n.startsWith(year.toString()))
         .map(n => parseInt(n.split('-')[1]))
         .filter(n => !isNaN(n));
-
+    
     // Inicia em 1250 se não houver ordens, senão usa o próximo número
     const nextNum = existingNumbers.length > 0 ? Math.max(...existingNumbers) + 1 : 1250;
     return `${year}-${String(nextNum).padStart(4, '0')}`;
@@ -672,7 +672,7 @@ function showToast(message, type = 'success') {
     toast.className = `toast ${type}`;
     toast.textContent = message;
     document.body.appendChild(toast);
-
+    
     setTimeout(() => {
         toast.remove();
     }, 3000);
@@ -684,72 +684,72 @@ function showToast(message, type = 'success') {
 function generatePDF() {
     const modalNumero = document.getElementById('modalNumero').textContent;
     const ordem = ordens.find(o => o.numeroOrdem === modalNumero);
-
+    
     if (!ordem) {
         showToast('Ordem não encontrada!', 'error');
         return;
     }
-
+    
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
-
+    
     // Configurações
     let y = 20;
     const margin = 15;
     const pageWidth = doc.internal.pageSize.width;
     const lineHeight = 5;
-
+    
     // ===== CABEÇALHO =====
     doc.setFontSize(18);
     doc.setFont(undefined, 'bold');
     doc.setTextColor(204, 112, 0);
     doc.text('ORDEM DE COMPRA', pageWidth / 2, y, { align: 'center' });
-
+    
     y += 8;
     doc.setFontSize(14);
     doc.text(`Nº ${ordem.numeroOrdem}`, pageWidth / 2, y, { align: 'center' });
-
+    
     y += 12;
-
+    
     // ===== DADOS PARA FATURAMENTO (FIXO) =====
     doc.setFontSize(11);
     doc.setTextColor(0, 0, 0);
     doc.setFont(undefined, 'bold');
     doc.text('DADOS PARA FATURAMENTO', margin, y);
-
+    
     y += lineHeight + 1;
     doc.setFontSize(10);
     doc.setFont(undefined, 'bold');
     doc.text('I.R. COMERCIO E MATERIAIS ELÉTRICOS LTDA', margin, y);
-
+    
     y += lineHeight;
     doc.setFont(undefined, 'normal');
     doc.setFontSize(9);
     doc.text('CNPJ: 33.149.502/0001-38  |  IE: 083.780.74-2', margin, y);
-
+    
     y += lineHeight;
     doc.text('Rua Tadorna nº 472, sala 2', margin, y);
-
+    
     y += lineHeight;
     doc.text('Novo Horizonte - Serra/ES  |  CEP: 29.163-318', margin, y);
-
+    
     y += lineHeight;
     doc.text('Telefax: (27) 3209-4291  |  E-mail: comercial.ircomercio@gmail.com', margin, y);
-
+    
     y += 10;
-
+    
     // ===== DADOS DO FORNECEDOR - TABELA =====
     doc.setFontSize(11);
     doc.setFont(undefined, 'bold');
     doc.text('DADOS DO FORNECEDOR', margin, y);
-
+    
     y += 6;
-
+    
     // Desenha tabela do fornecedor
     const tableStartY = y;
     const colWidth = (pageWidth - 2 * margin) / 2;
     const rowHeight = 7;
-
+    
     const fornecedorFields = [
         ['Razão Social', ordem.razaoSocial],
         ['Nome Fantasia', ordem.nomeFantasia || '-'],
@@ -760,42 +760,40 @@ function generatePDF() {
         ['Telefone', ordem.telefone || '-'],
         ['E-mail', ordem.email || '-']
     ];
-
+    
     doc.setFontSize(8);
-
+    
     fornecedorFields.forEach((field, index) => {
         const currentY = tableStartY + (index * rowHeight);
-
+        
         // Desenha borda da célula
         doc.setDrawColor(200, 200, 200);
         doc.rect(margin, currentY, colWidth, rowHeight);
         doc.rect(margin + colWidth, currentY, colWidth, rowHeight);
-
+        
         // Label (coluna esquerda)
         doc.setFont(undefined, 'bold');
         doc.text(field[0] + ':', margin + 2, currentY + 4.5);
-
+        
         // Valor (coluna direita)
         doc.setFont(undefined, 'normal');
         const textValue = field[1].length > 45 ? field[1].substring(0, 42) + '...' : field[1];
         doc.text(textValue, margin + colWidth + 2, currentY + 4.5);
     });
-
+    
     y = tableStartY + (fornecedorFields.length * rowHeight) + 8;
-
+    
     // ===== ITENS DO PEDIDO - TABELA =====
     doc.setFontSize(11);
     doc.setFont(undefined, 'bold');
     doc.text('ITENS DO PEDIDO', margin, y);
-
+    
     y += 6;
-
+    
     // Configuração da tabela de itens
     const itemTableStartY = y;
     const tableWidth = pageWidth - (2 * margin);
     const colWidths = {
-        item: tableWidth * 0.08,        // 8%
-        especificacao: tableWidth * 0.42, // 42%
         item: tableWidth * 0.06,        // 6%
         especificacao: tableWidth * 0.44, // 44%
         qtd: tableWidth * 0.10,         // 10%
@@ -803,25 +801,20 @@ function generatePDF() {
         valorUn: tableWidth * 0.15,     // 15%
         total: tableWidth * 0.15        // 15%
     };
-
-    const itemRowHeight = 9;
+    
     const itemRowHeight = 10;
-
+    
     // Cabeçalho da tabela com fundo cinza escuro
-    doc.setFillColor(108, 117, 125); // Cinza escuro como na imagem
-    doc.rect(margin, y, tableWidth, itemRowHeight, 'F');
     doc.setFillColor(108, 117, 125); // Cinza escuro
     doc.setDrawColor(180, 180, 180);
     doc.rect(margin, y, tableWidth, itemRowHeight, 'FD');
-
+    
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(9);
     doc.setFont(undefined, 'bold');
-
+    
     let xPos = margin;
-
-    // Centraliza texto nas células do cabeçalho
-    doc.text('ITEM', xPos + (colWidths.item / 2), y + 6, { align: 'center' });
+    
     // Desenha bordas verticais do cabeçalho
     doc.line(xPos, y, xPos, y + itemRowHeight); // Início
     
@@ -829,46 +822,40 @@ function generatePDF() {
     doc.text('ITEM', xPos + (colWidths.item / 2), y + 6.5, { align: 'center' });
     xPos += colWidths.item;
     doc.line(xPos, y, xPos, y + itemRowHeight);
-
-    doc.text('ESPECIFICAÇÃO', xPos + (colWidths.especificacao / 2), y + 6, { align: 'center' });
+    
     // ESPECIFICAÇÃO
     doc.text('ESPECIFICAÇÃO', xPos + (colWidths.especificacao / 2), y + 6.5, { align: 'center' });
     xPos += colWidths.especificacao;
     doc.line(xPos, y, xPos, y + itemRowHeight);
-
-    doc.text('QTD', xPos + (colWidths.qtd / 2), y + 6, { align: 'center' });
+    
     // QTD
     doc.text('QTD', xPos + (colWidths.qtd / 2), y + 6.5, { align: 'center' });
     xPos += colWidths.qtd;
     doc.line(xPos, y, xPos, y + itemRowHeight);
-
-    doc.text('UNID', xPos + (colWidths.unid / 2), y + 6, { align: 'center' });
+    
     // UNID
     doc.text('UNID', xPos + (colWidths.unid / 2), y + 6.5, { align: 'center' });
     xPos += colWidths.unid;
     doc.line(xPos, y, xPos, y + itemRowHeight);
-
-    doc.text('VALOR UN', xPos + (colWidths.valorUn / 2), y + 6, { align: 'center' });
+    
     // VALOR UN
     doc.text('VALOR UN', xPos + (colWidths.valorUn / 2), y + 6.5, { align: 'center' });
     xPos += colWidths.valorUn;
     doc.line(xPos, y, xPos, y + itemRowHeight);
-
-    doc.text('TOTAL', xPos + (colWidths.total / 2), y + 6, { align: 'center' });
+    
     // TOTAL
     doc.text('TOTAL', xPos + (colWidths.total / 2), y + 6.5, { align: 'center' });
     xPos += colWidths.total;
     doc.line(xPos, y, xPos, y + itemRowHeight); // Final
-
+    
     y += itemRowHeight;
     doc.setTextColor(0, 0, 0);
-
+    
     // Linhas dos itens
     doc.setFont(undefined, 'normal');
     doc.setFontSize(9);
-
+    
     ordem.items.forEach((item, index) => {
-        if (y > 250) {
         if (y > 245) {
             doc.addPage();
             y = 20;
@@ -904,124 +891,88 @@ function generatePDF() {
             doc.setTextColor(0, 0, 0);
             doc.setFont(undefined, 'normal');
         }
-
-        // Linha zebrada (branco e cinza claro alternados)
+        
         // Linha zebrada (cinza claro em linhas ímpares)
         if (index % 2 !== 0) {
             doc.setFillColor(240, 240, 240);
             doc.rect(margin, y, tableWidth, itemRowHeight, 'F');
         }
-
-        // Bordas verticais
+        
         xPos = margin;
         
         // Desenha borda esquerda
         doc.setDrawColor(180, 180, 180);
         doc.setLineWidth(0.3);
-        xPos = margin;
         doc.line(xPos, y, xPos, y + itemRowHeight);
-
-        // Item - centralizado
-        const itemX = xPos + (colWidths.item / 2);
-        doc.text(item.item.toString(), itemX, y + 6, { align: 'center' });
-        doc.line(xPos, y, xPos, y + itemRowHeight); // Borda esquerda
+        
         // ITEM - centralizado
         doc.text(item.item.toString(), xPos + (colWidths.item / 2), y + 6.5, { align: 'center' });
         xPos += colWidths.item;
-        doc.line(xPos, y, xPos, y + itemRowHeight); // Borda direita do item
         doc.line(xPos, y, xPos, y + itemRowHeight);
-
-        // Especificação - alinhado à esquerda
-        const especificacao = item.especificacao.length > 55 
-            ? item.especificacao.substring(0, 52) + '...' 
+        
         // ESPECIFICAÇÃO - alinhado à esquerda com margem
         const especificacao = item.especificacao.length > 60 
             ? item.especificacao.substring(0, 57) + '...' 
             : item.especificacao;
-        doc.text(especificacao, xPos + 2, y + 6);
         doc.text(especificacao, xPos + 3, y + 6.5);
         xPos += colWidths.especificacao;
         doc.line(xPos, y, xPos, y + itemRowHeight);
-
+        
         // QTD - centralizado
-        const qtdX = xPos + (colWidths.qtd / 2);
-        doc.text(item.quantidade.toString(), qtdX, y + 6, { align: 'center' });
         doc.text(item.quantidade.toString(), xPos + (colWidths.qtd / 2), y + 6.5, { align: 'center' });
         xPos += colWidths.qtd;
         doc.line(xPos, y, xPos, y + itemRowHeight);
-
-        // Unid - centralizado
-        const unidX = xPos + (colWidths.unid / 2);
-        doc.text(item.unidade, unidX, y + 6, { align: 'center' });
+        
         // UNID - centralizado
         doc.text(item.unidade, xPos + (colWidths.unid / 2), y + 6.5, { align: 'center' });
         xPos += colWidths.unid;
         doc.line(xPos, y, xPos, y + itemRowHeight);
-
-        // Valor UN - centralizado
-        const valorUnX = xPos + (colWidths.valorUn / 2);
+        
         // VALOR UN - centralizado com R$
         const valorUnFormatted = 'R$ ' + item.valorUnitario.toFixed(2).replace('.', ',');
-        doc.text(valorUnFormatted, valorUnX, y + 6, { align: 'center' });
         doc.text(valorUnFormatted, xPos + (colWidths.valorUn / 2), y + 6.5, { align: 'center' });
         xPos += colWidths.valorUn;
         doc.line(xPos, y, xPos, y + itemRowHeight);
-
-        // Total - centralizado
-        const totalX = xPos + (colWidths.total / 2);
-        doc.text(item.valorTotal, totalX, y + 6, { align: 'center' });
+        
         // TOTAL - centralizado
         doc.text(item.valorTotal, xPos + (colWidths.total / 2), y + 6.5, { align: 'center' });
         xPos += colWidths.total;
-        doc.line(xPos, y, xPos, y + itemRowHeight); // Borda direita
         doc.line(xPos, y, xPos, y + itemRowHeight);
-
+        
         // Borda horizontal inferior
         doc.line(margin, y + itemRowHeight, margin + tableWidth, y + itemRowHeight);
-
+        
         y += itemRowHeight;
     });
-
-    // Borda final da tabela
-    doc.setLineWidth(0.5);
-    doc.line(margin, itemTableStartY, margin + tableWidth, itemTableStartY); // Topo
-    doc.line(margin, y, margin + tableWidth, y); // Base
-    doc.line(margin, itemTableStartY, margin, y); // Esquerda
-    doc.line(margin + tableWidth, itemTableStartY, margin + tableWidth, y); // Direita
     
     y += 8;
-
+    
     // ===== VALOR TOTAL, IPI, ST, FRETE =====
     doc.setFontSize(11);
     doc.setFont(undefined, 'bold');
     doc.text(`Valor Total: ${ordem.valorTotal}`, margin, y);
-
+    
     y += 6;
     doc.setFontSize(10);
-    doc.setFont(undefined, 'normal');
-    
     doc.setFont(undefined, 'bold');
-    doc.text('IPI:', margin, y);
     doc.text('IPI: ', margin, y);
     doc.setFont(undefined, 'normal');
     doc.text(ordem.ipi || 'ISENTO', margin + 10, y);
-
+    
     y += 5;
     doc.setFont(undefined, 'bold');
-    doc.text('ST:', margin, y);
     doc.text('ST: ', margin, y);
     doc.setFont(undefined, 'normal');
     doc.text(ordem.st || 'NÃO INCLUÍDO', margin + 10, y);
-
+    
     y += 5;
     doc.setFont(undefined, 'bold');
-    doc.text('Frete:', margin, y);
     doc.text('Frete: ', margin, y);
     doc.setFont(undefined, 'normal');
     doc.text(ordem.frete, margin + 15, y);
-
+    
     y += 10;
-
+    
     // ===== LOCAL DE ENTREGA (FIXO) =====
     doc.setFontSize(10);
     doc.setFont(undefined, 'bold');
@@ -1030,9 +981,9 @@ function generatePDF() {
     doc.setFont(undefined, 'normal');
     doc.setFontSize(9);
     doc.text('Rua Tadorna nº 472, sala 2, Novo Horizonte - Serra/ES  |  CEP: 29.163-318', margin, y);
-
+    
     y += 8;
-
+    
     // ===== PRAZO E FRETE =====
     doc.setFontSize(10);
     doc.setFont(undefined, 'bold');
@@ -1040,36 +991,36 @@ function generatePDF() {
     doc.setFont(undefined, 'normal');
     doc.setFontSize(9);
     doc.text(ordem.prazoEntrega, margin + 38, y);
-
+    
     doc.setFont(undefined, 'bold');
     doc.setFontSize(10);
     doc.text('FRETE:', pageWidth - margin - 35, y);
     doc.setFont(undefined, 'normal');
     doc.setFontSize(9);
     doc.text(ordem.frete, pageWidth - margin - 20, y);
-
+    
     y += 10;
-
+    
     // ===== DADOS DO PAGAMENTO =====
     doc.setFontSize(11);
     doc.setFont(undefined, 'bold');
     doc.text('DADOS DO PAGAMENTO', margin, y);
-
+    
     y += 6;
     doc.setFontSize(9);
     doc.setFont(undefined, 'normal');
     doc.text(`Forma de Pagamento: ${ordem.formaPagamento}`, margin, y);
-
+    
     y += 5;
     doc.text(`Prazo de Pagamento: ${ordem.prazoPagamento}`, margin, y);
-
+    
     if (ordem.dadosBancarios) {
         y += 5;
         doc.text(`Dados Bancários: ${ordem.dadosBancarios}`, margin, y);
     }
-
+    
     y += 12;
-
+    
     // ===== DATA E ASSINATURA =====
     const dataOrdem = new Date(ordem.dataOrdem + 'T00:00:00');
     const dia = dataOrdem.getDate();
@@ -1077,42 +1028,42 @@ function generatePDF() {
                    'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
     const mes = meses[dataOrdem.getMonth()];
     const ano = dataOrdem.getFullYear();
-
+    
     doc.setFontSize(10);
     doc.text(`Serra/ES, ${dia} de ${mes} de ${ano}`, pageWidth / 2, y, { align: 'center' });
-
+    
     y += 15;
-
+    
     // Linha de assinatura
     doc.setLineWidth(0.5);
     doc.line(pageWidth / 2 - 30, y, pageWidth / 2 + 30, y);
-
+    
     y += 5;
     doc.setFontSize(9);
     doc.setFont(undefined, 'bold');
     doc.text('Rosemeire Bicalho de Lima Gravino', pageWidth / 2, y, { align: 'center' });
-
+    
     y += 5;
     doc.setFont(undefined, 'normal');
     doc.text('Diretora', pageWidth / 2, y, { align: 'center' });
-
+    
     y += 12;
-
+    
     // ===== ATENÇÃO SR. FORNECEDOR =====
     doc.setFontSize(10);
     doc.setFont(undefined, 'bold');
     doc.setTextColor(204, 112, 0);
     doc.text('ATENÇÃO SR. FORNECEDOR', pageWidth / 2, y, { align: 'center' });
-
+    
     y += 6;
     doc.setFontSize(9);
     doc.setTextColor(0, 0, 0);
     doc.setFont(undefined, 'normal');
     doc.text(`1. GENTILEZA MENCIONAR NA NOTA FISCAL O Nº ${ordem.numeroOrdem}`, margin, y);
-
+    
     y += 5;
     doc.text('2. FAVOR ENVIAR A NOTA FISCAL ELETRÔNICA (.XML) PARA: FINANCEIRO.IRCOMERCIO@GMAIL.COM', margin, y);
-
+    
     // Salvar PDF
     doc.save(`Ordem_${ordem.numeroOrdem}.pdf`);
     showToast('PDF gerado com sucesso!', 'success');
