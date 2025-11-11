@@ -706,7 +706,7 @@ function generatePDFForOrdem(ordem) {
     doc.text('DADOS PARA FATURAMENTO', margin, y);
     
     y += lineHeight + 1;
-    doc.setFontSize(10);
+    doc.setFontSize(11);
     doc.setFont(undefined, 'bold');
     doc.text('I.R. COMERCIO E MATERIAIS ELÉTRICOS LTDA', margin, y);
     
@@ -998,10 +998,10 @@ function generatePDFForOrdem(ordem) {
     doc.text('PRAZO DE ENTREGA:', margin, y);
     doc.setFont(undefined, 'normal');
     doc.setFontSize(11);
-    doc.text(ordem.prazoEntrega, margin + 38, y);
+    doc.text(ordem.prazoEntrega, margin + 20, y);
     
     doc.setFont(undefined, 'bold');
-    doc.setFontSize(10);
+    doc.setFontSize(11);
     doc.text('FRETE:', pageWidth - margin - 35, y);
     doc.setFont(undefined, 'normal');
     doc.setFontSize(11);
