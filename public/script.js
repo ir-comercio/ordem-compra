@@ -665,3 +665,181 @@ function generatePDF() {
             doc.setTextColor(255, 255, 255);
             doc.setFont(undefined, 'bold');
             xPos = margin;
+            headers.forEach((header, i) => {
+                doc.line(xPos, y, xPos, y + itemRowHeight);
+                doc.text(header, xPos + (widths[i] / 2), y + 6.5, { align: 'center' });
+                xPos += widths[i];
+            });
+            doc.line(xPos, y, xPos, y + itemRowHeight);
+            y += itemRowHeight;
+            doc.setTextColor(0, 0, 0);
+            doc.setFont(undefined, 'normal');
+        }
+        
+        // Linha zebrada
+        if (index % 2 !== 0) {
+            doc.setFillColor(240, 240, 240);
+            doc.rect(margin, y, tableWidth, itemRowHeight, 'F');
+        }
+        
+        xPos = margin;
+        doc.setDrawColor(180, 180, 180);
+        doc.setLineWidth(0.3);
+        
+        // ITEM
+        doc.line(xPos, y, xPos, y + itemRowHeight);
+        doc.text(item.item.toString(), xPos + (colWidths.item / 2), y + 6.5, { align: 'center' });
+        xPos += colWidths.item;
+        
+        // ESPECIFICAÇÃO
+        doc.line(xPos, y, xPos, y + itemRowHeight);
+        const especificacao = item.especificacao.length > 50 ? item.especificacao.substring(0, 47) + '...' : item.especificacao;
+        doc.text(especificacao, xPos + 2, y + 6.5);
+        xPos += colWidths.especificacao;
+        
+        // QTD
+        doc.line(xPos, y, xPos, y + itemRowHeight);
+        doc.text(item.quantidade.toString(), xPos + (colWidths.qtd / 2), y + 6.5, { align: 'center' });
+        xPos += colWidths.qtd;
+        
+        // UNID
+        doc.line(xPos, y, xPos, y + itemRowHeight);
+        doc.text(item.unidade, xPos + (colWidths.unid / 2), y + 6.5, { align: 'center' });
+        xPos += colWidths.unid;
+        
+        // VALOR UN
+        doc.line(xPos, y, xPos, y + itemRowHeight);
+        const valorUnFormatted = 'R$ ' + item.valorUnitario.toFixed(2).replace('.', ',');
+        doc.text(valorUnFormatted, xPos + (colWidths.valorUn / 2), y + 6.5, { align: 'center' });
+        xPos += colWidths.valorUn;
+        
+        // IPI
+        doc.line(xPos, y, xPos, y + itemRowHeight);
+        doc.text(item.ipi || 'Isento', xPos + (colWidths.ipi / 2), y + 6.5, { align: 'center' });
+        xPos += colWidths.ipi;
+        
+        // ST
+        doc.line(xPos, y, xPos, y + itemRowHeight);
+        doc.text(item.st || 'Não incluído', xPos + (colWidths.st / 2), y + 6.5, { align: 'center' });
+        xPos += colWidths.st;
+        
+        // TOTAL
+        doc.line(xPos, y, xPos, y + itemRowHeight);
+        doc.text(item.valorTotal, xPos + (colWidths.total / 2), y + 6.5, { align: 'center' });
+        xPos += colWidths.total;
+        doc.line(xPos, y, xPos, y + itemRowHeight);
+        
+        // Borda horizontal inferior
+        doc.line(margin, y + itemRowHeight, margin + tableWidth, y + itemRowHeight);
+        y += itemRowHeight;
+    });
+    
+    y += 8;
+    
+    // VALOR TOTAL
+    doc.setFontSize(12);
+    doc.setFont(undefined, 'bold');
+    doc.text(`VALOR TOTAL: ${ordem.valorTotal}`, pageWidth - margin, y, { align: 'right' });
+    y += 10;
+    
+    // LOCAL DE ENTREGA (FIXO)
+    doc.setFontSize(10);
+    doc.setFont(undefined, 'bold');
+    doc.text('LOCAL DE ENTREGA (FIXO):', margin, y);
+    y += 5;
+    doc.setFont(undefined, 'normal');
+    doc.setFontSize(9);
+    doc.text('Rua Tadorna nº 472, sala 2, Novo Horizonte - Serra/ES CEP: 29.163-318', margin, y);
+    y += 8;
+    
+    // PRAZO DE ENTREGA
+    doc.setFontSize(10);
+    doc.setFont(undefined, 'bold');
+    doc.text('PRAZO DE ENTREGA:', margin, y);
+    doc.setFont(undefined, 'normal');
+    doc.setFontSize(9);
+    doc.text(ordem.prazoEntrega, margin + 42, y);
+    y += 5;
+    
+    // FRETE
+    doc.setFont(undefined, 'bold');
+    doc.setFontSize(10);
+    doc.text('FRETE:', margin, y);
+    doc.setFont(undefined, 'normal');
+    doc.setFontSize(9);
+    doc.text(ordem.frete, margin + 42, y);
+    y += 10;
+    
+    // DADOS DO PAGAMENTO
+    doc.setFontSize(11);
+    doc.setFont(undefined, 'bold');
+    doc.text('DADOS DO PAGAMENTO', margin, y);
+    y += 6;
+    
+    doc.setFontSize(9);
+    doc.setFont(undefined, 'bold');
+    doc.text('Forma de Pagamento: ', margin, y);
+    doc.setFont(undefined, 'normal');
+    doc.text(ordem.formaPagamento, margin + 42, y);
+    y += 5;
+    
+    doc.setFont(undefined, 'bold');
+    doc.text('Prazo de Pagamento: ', margin, y);
+    doc.setFont(undefined, 'normal');
+    doc.text(ordem.prazoPagamento, margin + 42, y);
+    
+    if (ordem.dadosBancarios) {
+        y += 5;
+        doc.setFont(undefined, 'bold');
+        doc.text('Dados Bancários: ', margin, y);
+        doc.setFont(undefined, 'normal');
+        doc.text(ordem.dadosBancarios, margin + 42, y);
+    }
+    
+    y += 15;
+    
+    // DATA E ASSINATURA
+    const dataOrdem = new Date(ordem.dataOrdem + 'T00:00:00');
+    const dia = dataOrdem.getDate();
+    const meses = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+    const mes = meses[dataOrdem.getMonth()];
+    const ano = dataOrdem.getFullYear();
+    
+    doc.setFontSize(10);
+    doc.setFont(undefined, 'normal');
+    doc.text(`Serra/ES, ${dia} de ${mes} de ${ano}`, margin, y);
+    y += 15;
+    
+    // Linha de assinatura
+    doc.setLineWidth(0.5);
+    doc.line(margin, y, margin + 60, y);
+    y += 5;
+    
+    doc.setFontSize(9);
+    doc.setFont(undefined, 'bold');
+    doc.text('Rosemeire Bicalho de Lima Gravino', margin, y);
+    y += 5;
+    
+    doc.setFont(undefined, 'normal');
+    doc.text('Diretora', margin, y);
+    y += 12;
+    
+    // ATENÇÃO SR. FORNECEDOR
+    doc.setFontSize(10);
+    doc.setFont(undefined, 'bold');
+    doc.setTextColor(204, 112, 0);
+    doc.text('ATENÇÃO SR. FORNECEDOR', margin, y);
+    y += 6;
+    
+    doc.setFontSize(9);
+    doc.setTextColor(0, 0, 0);
+    doc.setFont(undefined, 'normal');
+    doc.text(`1. GENTILEZA MENCIONAR NA NOTA FISCAL O Nº ${ordem.numeroOrdem}`, margin, y);
+    y += 5;
+    
+    doc.text('2. FAVOR ENVIAR A NOTA FISCAL ELETRÔNICA (.XML) PARA: FINANCEIRO.IRCOMERCIO@GMAIL.COM', margin, y);
+    
+    // Salvar PDF
+    doc.save(`Ordem_${ordem.numeroOrdem}.pdf`);
+    showToast('PDF gerado com sucesso!', 'success');
+}
