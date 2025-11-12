@@ -302,9 +302,10 @@ function handleSubmit(event) {
         email: document.getElementById('email').value,
         items: items,
         valorTotal: document.getElementById('valorTotalOrdem').value,
+        frete: document.getElementById('frete').value,
         localEntrega: document.getElementById('localEntrega').value,
         prazoEntrega: document.getElementById('prazoEntrega').value,
-        transporte: document.getElementById('').value,
+        transporte: document.getElementById('transporte').value,
         formaPagamento: document.getElementById('formaPagamento').value,
         prazoPagamento: document.getElementById('prazoPagamento').value,
         dadosBancarios: document.getElementById('dadosBancarios').value,
@@ -353,6 +354,7 @@ function editOrdem(id) {
     document.getElementById('frete').value = ordem.frete || '';
     document.getElementById('localEntrega').value = ordem.localEntrega || '';
     document.getElementById('prazoEntrega').value = ordem.prazoEntrega || '';
+    document.getElementById('transporte').value = ordem.transporte || '';
     document.getElementById('formaPagamento').value = ordem.formaPagamento;
     document.getElementById('prazoPagamento').value = ordem.prazoPagamento;
     document.getElementById('dadosBancarios').value = ordem.dadosBancarios || '';
@@ -477,6 +479,7 @@ function viewOrdem(id) {
             <h4>Informações de Entrega</h4>
             ${ordem.localEntrega ? `<p><strong>Local de Entrega:</strong> ${ordem.localEntrega}</p>` : ''}
             ${ordem.prazoEntrega ? `<p><strong>Prazo de Entrega:</strong> ${ordem.prazoEntrega}</p>` : ''}
+            ${ordem.transporte ? `<p><strong>Transporte:</strong> ${ordem.transporte}</p>` : ''}
         </div>
     `;
     
@@ -684,16 +687,6 @@ function generatePDFForOrdem(ordem) {
     const pageWidth = doc.internal.pageSize.width;
     const lineHeight = 5;
     
-    // LOGO NO CANTO SUPERIOR ESQUERDO
-    try {
-        const logo = new Image();
-        logo.src = 'I.R.-COMERCIO-E-MATERIAIS-ELETRICOS-LTDA.png';
-        doc.addImage(logo, 'PNG', margin, y, 40, 15); // x, y, largura, altura
-        y += 18; // Ajusta posição após a logo
-    } catch (error) {
-        console.log('Logo não encontrada');
-    }
-    
     // CABEÇALHO
     doc.setFontSize(18);
     doc.setFont(undefined, 'bold');
@@ -713,29 +706,23 @@ function generatePDFForOrdem(ordem) {
     doc.text('DADOS PARA FATURAMENTO', margin, y);
     
     y += lineHeight + 1;
-    doc.setFontSize(11);
+    doc.setFontSize(10);
     doc.setFont(undefined, 'bold');
-    doc.text('I.R. COMÉRCIO E MATERIAIS ELÉTRICOS LTDA', margin, y);
+    doc.text('I.R. COMERCIO E MATERIAIS ELÉTRICOS LTDA', margin, y);
     
-     y += lineHeight + 1;
-    doc.setFontSize(11);
+    y += lineHeight;
     doc.setFont(undefined, 'normal');
+    doc.setFontSize(9);
     doc.text('CNPJ: 33.149.502/0001-38  |  IE: 083.780.74-2', margin, y);
     
-     y += lineHeight + 1;
-    doc.setFontSize(11);
-    doc.setFont(undefined, 'normal');
-    doc.text('RUA TADORNA Nº 472, SALA 2', margin, y);
+    y += lineHeight;
+    doc.text('Rua Tadorna nº 472, sala 2', margin, y);
     
-     y += lineHeight + 1;
-    doc.setFontSize(11);
-    doc.setFont(undefined, 'normal');
-    doc.text('NOVO HORIZONTE - SERRA/ES  |  CEP: 29.163-318', margin, y);
+    y += lineHeight;
+    doc.text('Novo Horizonte - Serra/ES  |  CEP: 29.163-318', margin, y);
     
-     y += lineHeight + 1;
-    doc.setFontSize(11);
-    doc.setFont(undefined, 'normal');
-    doc.text('TELEFAX: (27) 3209-4291  |  E-MAIL: COMERCIAL.IRCOMERCIO@GMAIL.COM', margin, y);
+    y += lineHeight;
+    doc.text('Telefax: (27) 3209-4291  |  E-mail: comercial.ircomercio@gmail.com', margin, y);
     
     y += 10;
     
@@ -785,7 +772,7 @@ function generatePDFForOrdem(ordem) {
     // ITENS DO PEDIDO
     doc.setFontSize(11);
     doc.setFont(undefined, 'bold');
-    doc.text('ITENS DO PEDIDO', margin, y);
+    doc.text('ITENSdoc.text('ITENS DO PEDIDO', margin, y);
     
     y += 6;
     
@@ -793,24 +780,24 @@ function generatePDFForOrdem(ordem) {
     const tableWidth = pageWidth - (2 * margin);
     const colWidths = {
         item: tableWidth * 0.05,          // 5%
-        especificacao: tableWidth * 0.35,    // 35%
-        qtd: tableWidth * 0.08,              // 8%
-        unid: tableWidth * 0.08,             // 8%
-        valorUn: tableWidth * 0.12,          // 12%
-        ipi: tableWidth * 0.10,              // 10%
-        st: tableWidth * 0.10,               // 10%
-        total: tableWidth * 0.12             // 12%
+        especificacao: tableWidth * 0.35, // 35%
+        qtd: tableWidth * 0.08,           // 8%
+        unid: tableWidth * 0.08,          // 8%
+        valorUn: tableWidth * 0.12,       // 12%
+        ipi: tableWidth * 0.10,           // 10%
+        st: tableWidth * 0.10,            // 10%
+        total: tableWidth * 0.12          // 12%
     };
     
-    const itemRowHeight = 10;
+    const itemRowHeight = 8;
     
-    // Cabeçalho da tabela com fundo cinza escuro
+    // Cabeçalho da tabela
     doc.setFillColor(108, 117, 125);
     doc.setDrawColor(180, 180, 180);
     doc.rect(margin, y, tableWidth, itemRowHeight, 'FD');
     
     doc.setTextColor(255, 255, 255);
-    doc.setFontSize(9);
+    doc.setFontSize(8);
     doc.setFont(undefined, 'bold');
     
     let xPos = margin;
@@ -819,61 +806,80 @@ function generatePDFForOrdem(ordem) {
     doc.line(xPos, y, xPos, y + itemRowHeight);
     
     // ITEM
-    doc.text('ITEM', xPos + (colWidths.item / 2), y + 6.5, { align: 'center' });
+    doc.text('ITEM', xPos + (colWidths.item / 2), y + 5.5, { align: 'center' });
     xPos += colWidths.item;
     doc.line(xPos, y, xPos, y + itemRowHeight);
     
     // ESPECIFICAÇÃO
-    doc.text('ESPECIFICAÇÃO', xPos + (colWidths.especificacao / 2), y + 6.5, { align: 'center' });
+    doc.text('ESPECIFICAÇÃO', xPos + (colWidths.especificacao / 2), y + 5.5, { align: 'center' });
     xPos += colWidths.especificacao;
     doc.line(xPos, y, xPos, y + itemRowHeight);
     
     // QTD
-    doc.text('QTD', xPos + (colWidths.qtd / 2), y + 6.5, { align: 'center' });
+    doc.text('QTD', xPos + (colWidths.qtd / 2), y + 5.5, { align: 'center' });
     xPos += colWidths.qtd;
     doc.line(xPos, y, xPos, y + itemRowHeight);
     
     // UNID
-    doc.text('UNID', xPos + (colWidths.unid / 2), y + 6.5, { align: 'center' });
+    doc.text('UNID', xPos + (colWidths.unid / 2), y + 5.5, { align: 'center' });
     xPos += colWidths.unid;
     doc.line(xPos, y, xPos, y + itemRowHeight);
     
     // VALOR UN
-    doc.text('VALOR UN', xPos + (colWidths.valorUn / 2), y + 6.5, { align: 'center' });
+    doc.text('VALOR UN', xPos + (colWidths.valorUn / 2), y + 5.5, { align: 'center' });
     xPos += colWidths.valorUn;
     doc.line(xPos, y, xPos, y + itemRowHeight);
     
     // IPI
-    doc.text('IPI', xPos + (colWidths.ipi / 2), y + 6.5, { align: 'center' });
+    doc.text('IPI', xPos + (colWidths.ipi / 2), y + 5.5, { align: 'center' });
     xPos += colWidths.ipi;
     doc.line(xPos, y, xPos, y + itemRowHeight);
     
     // ST
-    doc.text('ST', xPos + (colWidths.st / 2), y + 6.5, { align: 'center' });
+    doc.text('ST', xPos + (colWidths.st / 2), y + 5.5, { align: 'center' });
     xPos += colWidths.st;
     doc.line(xPos, y, xPos, y + itemRowHeight);
     
     // TOTAL
-    doc.text('TOTAL', xPos + (colWidths.total / 2), y + 6.5, { align: 'center' });
+    doc.text('TOTAL', xPos + (colWidths.total / 2), y + 5.5, { align: 'center' });
     xPos += colWidths.total;
     doc.line(xPos, y, xPos, y + itemRowHeight);
     
     y += itemRowHeight;
     doc.setTextColor(0, 0, 0);
     
+    // Função para quebrar texto em múltiplas linhas
+    function wrapText(text, maxWidth) {
+        const words = text.split(' ');
+        const lines = [];
+        let currentLine = words[0];
+        
+        for (let i = 1; i < words.length; i++) {
+            const testLine = currentLine + ' ' + words[i];
+            const testWidth = doc.getTextWidth(testLine);
+            
+            if (testWidth < maxWidth) {
+                currentLine = testLine;
+            } else {
+                lines.push(currentLine);
+                currentLine = words[i];
+            }
+        }
+        lines.push(currentLine);
+        return lines;
+    }
+    
     // Linhas dos itens
     doc.setFont(undefined, 'normal');
     doc.setFontSize(8);
     
     ordem.items.forEach((item, index) => {
-        // Calcula altura necessária para a especificação
-        const maxWidth = colWidths.especificacao - 6; // margem interna
-        const especLines = doc.splitTextToSize(item.especificacao, maxWidth);
-        const lineCount = especLines.length;
-        const necessaryHeight = Math.max(itemRowHeight, lineCount * 4 + 4);
+        // Quebrar especificação em múltiplas linhas
+        const especificacaoLines = wrapText(item.especificacao, colWidths.especificacao - 4);
+        const rowHeight = Math.max(itemRowHeight, especificacaoLines.length * 4 + 2);
         
-        // Verifica se precisa de nova página (deixa margem de 30 na parte inferior)
-        if (y + necessaryHeight > doc.internal.pageSize.height - 40) {
+        // Verifica se precisa adicionar nova página
+        if (y + rowHeight > 270) {
             doc.addPage();
             y = 20;
             
@@ -882,32 +888,32 @@ function generatePDFForOrdem(ordem) {
             doc.rect(margin, y, tableWidth, itemRowHeight, 'FD');
             doc.setTextColor(255, 255, 255);
             doc.setFont(undefined, 'bold');
-            doc.setFontSize(9);
+            doc.setFontSize(8);
             
             xPos = margin;
             doc.line(xPos, y, xPos, y + itemRowHeight);
-            doc.text('ITEM', xPos + (colWidths.item / 2), y + 6.5, { align: 'center' });
+            doc.text('ITEM', xPos + (colWidths.item / 2), y + 5.5, { align: 'center' });
             xPos += colWidths.item;
             doc.line(xPos, y, xPos, y + itemRowHeight);
-            doc.text('ESPECIFICAÇÃO', xPos + (colWidths.especificacao / 2), y + 6.5, { align: 'center' });
+            doc.text('ESPECIFICAÇÃO', xPos + (colWidths.especificacao / 2), y + 5.5, { align: 'center' });
             xPos += colWidths.especificacao;
             doc.line(xPos, y, xPos, y + itemRowHeight);
-            doc.text('QTD', xPos + (colWidths.qtd / 2), y + 6.5, { align: 'center' });
+            doc.text('QTD', xPos + (colWidths.qtd / 2), y + 5.5, { align: 'center' });
             xPos += colWidths.qtd;
             doc.line(xPos, y, xPos, y + itemRowHeight);
-            doc.text('UNID', xPos + (colWidths.unid / 2), y + 6.5, { align: 'center' });
+            doc.text('UNID', xPos + (colWidths.unid / 2), y + 5.5, { align: 'center' });
             xPos += colWidths.unid;
             doc.line(xPos, y, xPos, y + itemRowHeight);
-            doc.text('VALOR UN', xPos + (colWidths.valorUn / 2), y + 6.5, { align: 'center' });
+            doc.text('VALOR UN', xPos + (colWidths.valorUn / 2), y + 5.5, { align: 'center' });
             xPos += colWidths.valorUn;
             doc.line(xPos, y, xPos, y + itemRowHeight);
-            doc.text('IPI', xPos + (colWidths.ipi / 2), y + 6.5, { align: 'center' });
+            doc.text('IPI', xPos + (colWidths.ipi / 2), y + 5.5, { align: 'center' });
             xPos += colWidths.ipi;
             doc.line(xPos, y, xPos, y + itemRowHeight);
-            doc.text('ST', xPos + (colWidths.st / 2), y + 6.5, { align: 'center' });
+            doc.text('ST', xPos + (colWidths.st / 2), y + 5.5, { align: 'center' });
             xPos += colWidths.st;
             doc.line(xPos, y, xPos, y + itemRowHeight);
-            doc.text('TOTAL', xPos + (colWidths.total / 2), y + 6.5, { align: 'center' });
+            doc.text('TOTAL', xPos + (colWidths.total / 2), y + 5.5, { align: 'center' });
             xPos += colWidths.total;
             doc.line(xPos, y, xPos, y + itemRowHeight);
             
@@ -920,145 +926,130 @@ function generatePDFForOrdem(ordem) {
         // Linha zebrada
         if (index % 2 !== 0) {
             doc.setFillColor(240, 240, 240);
-            doc.rect(margin, y, tableWidth, necessaryHeight, 'F');
+            doc.rect(margin, y, tableWidth, rowHeight, 'F');
         }
         
         xPos = margin;
         
-        // Bordas verticais
+        // Desenha bordas
         doc.setDrawColor(180, 180, 180);
         doc.setLineWidth(0.3);
-        doc.line(xPos, y, xPos, y + necessaryHeight);
+        doc.line(xPos, y, xPos, y + rowHeight);
         
         // ITEM - centralizado verticalmente
-        doc.text(item.item.toString(), xPos + (colWidths.item / 2), y + (necessaryHeight / 2) + 1.5, { align: 'center' });
+        doc.text(item.item.toString(), xPos + (colWidths.item / 2), y + (rowHeight / 2) + 1.5, { align: 'center' });
         xPos += colWidths.item;
-        doc.line(xPos, y, xPos, y + necessaryHeight);
+        doc.line(xPos, y, xPos, y + rowHeight);
         
-        // ESPECIFICAÇÃO - com quebra de linha
-        doc.text(especLines, xPos + 3, y + 4);
+        // ESPECIFICAÇÃO - múltiplas linhas
+        especificacaoLines.forEach((line, lineIndex) => {
+            doc.text(line, xPos + 2, y + 5 + (lineIndex * 4));
+        });
         xPos += colWidths.especificacao;
-        doc.line(xPos, y, xPos, y + necessaryHeight);
+        doc.line(xPos, y, xPos, y + rowHeight);
         
-        // QTD - centralizado
-        doc.text(item.quantidade.toString(), xPos + (colWidths.qtd / 2), y + (necessaryHeight / 2) + 1.5, { align: 'center' });
+        // QTD
+        doc.text(item.quantidade.toString(), xPos + (colWidths.qtd / 2), y + (rowHeight / 2) + 1.5, { align: 'center' });
         xPos += colWidths.qtd;
-        doc.line(xPos, y, xPos, y + necessaryHeight);
+        doc.line(xPos, y, xPos, y + rowHeight);
         
-        // UNID - centralizado
-        doc.text(item.unidade, xPos + (colWidths.unid / 2), y + (necessaryHeight / 2) + 1.5, { align: 'center' });
+        // UNID
+        doc.text(item.unidade, xPos + (colWidths.unid / 2), y + (rowHeight / 2) + 1.5, { align: 'center' });
         xPos += colWidths.unid;
-        doc.line(xPos, y, xPos, y + necessaryHeight);
+        doc.line(xPos, y, xPos, y + rowHeight);
         
-        // VALOR UN - centralizado
+        // VALOR UN
         const valorUnFormatted = 'R$ ' + item.valorUnitario.toFixed(2).replace('.', ',');
-        doc.text(valorUnFormatted, xPos + (colWidths.valorUn / 2), y + (necessaryHeight / 2) + 1.5, { align: 'center' });
+        doc.text(valorUnFormatted, xPos + (colWidths.valorUn / 2), y + (rowHeight / 2) + 1.5, { align: 'center' });
         xPos += colWidths.valorUn;
-        doc.line(xPos, y, xPos, y + necessaryHeight);
+        doc.line(xPos, y, xPos, y + rowHeight);
         
-        // IPI - centralizado
-        doc.text(item.ipi || '-', xPos + (colWidths.ipi / 2), y + (necessaryHeight / 2) + 1.5, { align: 'center' });
+        // IPI
+        doc.text(item.ipi || '-', xPos + (colWidths.ipi / 2), y + (rowHeight / 2) + 1.5, { align: 'center' });
         xPos += colWidths.ipi;
-        doc.line(xPos, y, xPos, y + necessaryHeight);
+        doc.line(xPos, y, xPos, y + rowHeight);
         
-        // ST - centralizado
-        doc.text(item.st || '-', xPos + (colWidths.st / 2), y + (necessaryHeight / 2) + 1.5, { align: 'center' });
+        // ST
+        doc.text(item.st || '-', xPos + (colWidths.st / 2), y + (rowHeight / 2) + 1.5, { align: 'center' });
         xPos += colWidths.st;
-        doc.line(xPos, y, xPos, y + necessaryHeight);
+        doc.line(xPos, y, xPos, y + rowHeight);
         
-        // TOTAL - centralizado
-        doc.text(item.valorTotal, xPos + (colWidths.total / 2), y + (necessaryHeight / 2) + 1.5, { align: 'center' });
+        // TOTAL
+        doc.text(item.valorTotal, xPos + (colWidths.total / 2), y + (rowHeight / 2) + 1.5, { align: 'center' });
         xPos += colWidths.total;
-        doc.line(xPos, y, xPos, y + necessaryHeight);
+        doc.line(xPos, y, xPos, y + rowHeight);
         
         // Borda horizontal inferior
-        doc.line(margin, y + necessaryHeight, margin + tableWidth, y + necessaryHeight);
+        doc.line(margin, y + rowHeight, margin + tableWidth, y + rowHeight);
         
-        y += necessaryHeight;
+        y += rowHeight;
     });
     
     y += 8;
     
     // VALOR TOTAL E FRETE
-    if (y > doc.internal.pageSize.height - 80) {
-        doc.addPage();
-        y = 20;
-    }
     doc.setFontSize(11);
     doc.setFont(undefined, 'bold');
-    doc.text(`VALOR TOTAL: ${ordem.valorTotal}`, margin, y);
+    doc.text(`Valor Total: ${ordem.valorTotal}`, margin, y);
+    
+    y += 6;
+    doc.setFontSize(10);
+    doc.setFont(undefined, 'bold');
+    doc.text('Frete: ', margin, y);
+    doc.setFont(undefined, 'normal');
+    doc.text(ordem.frete, margin + 15, y);
     
     y += 10;
     
     // LOCAL DE ENTREGA (FIXO)
-    if (y > doc.internal.pageSize.height - 70) {
-        doc.addPage();
-        y = 20;
-    }
-    doc.setFontSize(11);
+    doc.setFontSize(10);
     doc.setFont(undefined, 'bold');
     doc.text('LOCAL DE ENTREGA:', margin, y);
     y += 5;
-    doc.setFontSize(11);
     doc.setFont(undefined, 'normal');
+    doc.setFontSize(9);
     doc.text('Rua Tadorna nº 472, sala 2, Novo Horizonte - Serra/ES  |  CEP: 29.163-318', margin, y);
     
-    y += 10;
+    y += 8;
     
     // PRAZO E FRETE
-    if (y > doc.internal.pageSize.height - 60) {
-        doc.addPage();
-        y = 20;
-    }
-    doc.setFontSize(11);
+    doc.setFontSize(10);
     doc.setFont(undefined, 'bold');
     doc.text('PRAZO DE ENTREGA:', margin, y);
     doc.setFont(undefined, 'normal');
-    doc.setFontSize(11);
-    doc.text(ordem.prazoEntrega, margin + 42, y);
+    doc.setFontSize(9);
+    doc.text(ordem.prazoEntrega, margin + 38, y);
     
     doc.setFont(undefined, 'bold');
-    doc.setFontSize(11);
+    doc.setFontSize(10);
     doc.text('FRETE:', pageWidth - margin - 35, y);
     doc.setFont(undefined, 'normal');
-    doc.setFontSize(11);
+    doc.setFontSize(9);
     doc.text(ordem.frete, pageWidth - margin - 20, y);
     
     y += 10;
     
     // DADOS DO PAGAMENTO
-    if (y > doc.internal.pageSize.height - 50) {
-        doc.addPage();
-        y = 20;
-    }
     doc.setFontSize(11);
     doc.setFont(undefined, 'bold');
     doc.text('DADOS DO PAGAMENTO', margin, y);
     
     y += 6;
-    doc.setFontSize(11);
+    doc.setFontSize(9);
     doc.setFont(undefined, 'normal');
     doc.text(`Forma de Pagamento: ${ordem.formaPagamento}`, margin, y);
     
     y += 5;
-    doc.setFontSize(11);
-    doc.setFont(undefined, 'normal');
     doc.text(`Prazo de Pagamento: ${ordem.prazoPagamento}`, margin, y);
     
     if (ordem.dadosBancarios) {
         y += 5;
-        doc.setFontSize(11);
-    doc.setFont(undefined, 'normal');
         doc.text(`Dados Bancários: ${ordem.dadosBancarios}`, margin, y);
     }
     
     y += 12;
     
     // DATA E ASSINATURA
-    if (y > doc.internal.pageSize.height - 40) {
-        doc.addPage();
-        y = 20;
-    }
     const dataOrdem = new Date(ordem.dataOrdem + 'T00:00:00');
     const dia = dataOrdem.getDate();
     const meses = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 
@@ -1072,22 +1063,10 @@ function generatePDFForOrdem(ordem) {
     y += 15;
     
     // Linha de assinatura
-    y += 15;
+    doc.setLineWidth(0.5);
+    doc.line(pageWidth / 2 - 30, y, pageWidth / 2 + 30, y);
     
-    // ASSINATURA (IMAGEM)
-    try {
-        const assinatura = new Image();
-        assinatura.src = 'assinatura.png.png'; // ou o nome correto do arquivo
-        doc.addImage(assinatura, 'PNG', pageWidth / 2 - 25, y - 10, 50, 15); // centralizada
-        y += 10;
-    } catch (error) {
-        console.log('Assinatura não encontrada');
-        // Linha de assinatura (fallback se não encontrar a imagem)
-        doc.setLineWidth(0.5);
-        doc.line(pageWidth / 2 - 30, y, pageWidth / 2 + 30, y);
-        y += 5;
-    }
-    
+    y += 5;
     doc.setFontSize(9);
     doc.setFont(undefined, 'bold');
     doc.text('Rosemeire Bicalho de Lima Gravino', pageWidth / 2, y, { align: 'center' });
@@ -1099,10 +1078,6 @@ function generatePDFForOrdem(ordem) {
     y += 12;
     
     // ATENÇÃO SR. FORNECEDOR
-    if (y > doc.internal.pageSize.height - 30) {
-        doc.addPage();
-        y = 20;
-    }
     doc.setFontSize(10);
     doc.setFont(undefined, 'bold');
     doc.setTextColor(204, 112, 0);
@@ -1112,10 +1087,10 @@ function generatePDFForOrdem(ordem) {
     doc.setFontSize(9);
     doc.setTextColor(0, 0, 0);
     doc.setFont(undefined, 'normal');
-    doc.text(`1. GENTILEZA MENCIONAR NA NOTA FISCAL O Nº ${ordem.numeroOrdem}`, pageWidth / 2, y, { align: 'center' });
+    doc.text(`1. GENTILEZA MENCIONAR NA NOTA FISCAL O Nº ${ordem.numeroOrdem}`, margin, y);
     
     y += 5;
-    doc.text('2. FAVOR ENVIAR A NOTA FISCAL ELETRÔNICA (.XML) PARA: FINANCEIRO.IRCOMERCIO@GMAIL.COM', pageWidth / 2, y, { align: 'center' });
+    doc.text('2. FAVOR ENVIAR A NOTA FISCAL ELETRÔNICA (.XML) PARA: FINANCEIRO.IRCOMERCIO@GMAIL.COM', margin, y);
     
     // Salvar PDF
     doc.save(`Ordem_${ordem.numeroOrdem}.pdf`);
