@@ -302,10 +302,9 @@ function handleSubmit(event) {
         email: document.getElementById('email').value,
         items: items,
         valorTotal: document.getElementById('valorTotalOrdem').value,
-        frete: document.getElementById('frete').value,
         localEntrega: document.getElementById('localEntrega').value,
         prazoEntrega: document.getElementById('prazoEntrega').value,
-        transporte: document.getElementById('transporte').value,
+        transporte: document.getElementById('').value,
         formaPagamento: document.getElementById('formaPagamento').value,
         prazoPagamento: document.getElementById('prazoPagamento').value,
         dadosBancarios: document.getElementById('dadosBancarios').value,
@@ -354,7 +353,6 @@ function editOrdem(id) {
     document.getElementById('frete').value = ordem.frete || '';
     document.getElementById('localEntrega').value = ordem.localEntrega || '';
     document.getElementById('prazoEntrega').value = ordem.prazoEntrega || '';
-    document.getElementById('transporte').value = ordem.transporte || '';
     document.getElementById('formaPagamento').value = ordem.formaPagamento;
     document.getElementById('prazoPagamento').value = ordem.prazoPagamento;
     document.getElementById('dadosBancarios').value = ordem.dadosBancarios || '';
@@ -479,7 +477,6 @@ function viewOrdem(id) {
             <h4>Informações de Entrega</h4>
             ${ordem.localEntrega ? `<p><strong>Local de Entrega:</strong> ${ordem.localEntrega}</p>` : ''}
             ${ordem.prazoEntrega ? `<p><strong>Prazo de Entrega:</strong> ${ordem.prazoEntrega}</p>` : ''}
-            ${ordem.transporte ? `<p><strong>Transporte:</strong> ${ordem.transporte}</p>` : ''}
         </div>
     `;
     
