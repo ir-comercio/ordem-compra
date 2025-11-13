@@ -1072,10 +1072,7 @@ function generatePDFForOrdem(ordem) {
     doc.setFontSize(10);
     doc.text(`Serra/ES, ${dia} de ${mes} de ${ano}`, pageWidth / 2, y, { align: 'center' });
     
-    y += 15;
-    
-    // Linha de assinatura
-    y += 15;
+    y += 10;
     
     // ASSINATURA (IMAGEM)
     try {
