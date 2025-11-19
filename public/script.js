@@ -1,3 +1,6 @@
+// ============================================
+// CONFIGURAÇÃO
+// ============================================
 let ordens = [];
 let currentMonth = new Date();
 let editingId = null;
@@ -85,8 +88,6 @@ function switchTab(tabId) {
         currentTab = tabIndex;
         showTab(currentTab);
     }
-    
-    event.preventDefault();
 }
 
 function showTab(index) {
@@ -132,11 +133,11 @@ function updateNavigationButtons() {
     if (currentTab === tabs.length - 1) {
         btnProximo.textContent = editingId ? 'Atualizar Ordem' : 'Registrar Ordem';
         btnProximo.classList.remove('secondary');
-        btnProximo.classList.add('primary');
+        btnProximo.classList.add('save');
     } else {
         btnProximo.textContent = 'Próximo';
         btnProximo.classList.add('secondary');
-        btnProximo.classList.remove('primary');
+        btnProximo.classList.remove('save');
     }
 }
 
@@ -161,21 +162,166 @@ function switchInfoTab(tabId) {
 function openFormModal() {
     editingId = null;
     currentTab = 0;
-    document.getElementById('formTitle').textContent = 'Nova Ordem de Compra';
-    document.getElementById('ordemForm').reset();
-    document.getElementById('editId').value = '';
-    
-    document.getElementById('itemsBody').innerHTML = '';
-    itemCounter = 0;
-    addItem();
     
     const nextNumber = getNextOrderNumber();
-    document.getElementById('numeroOrdem').value = nextNumber;
+    const today = new Date().toISOString().split('T')[0];
     
-    setTodayDate();
-    showTab(0);
-    
-    document.getElementById('formModal').classList.add('show');
+    const modalHTML = `
+        <div class="modal-overlay" id="formModal">
+            <div class="modal-content" style="max-width: 1200px;">
+                <div class="modal-header">
+                    <h3 class="modal-title">Nova Ordem de Compra</h3>
+                </div>
+                
+                <div class="tabs-container">
+                    <div class="tabs-nav">
+                        <button class="tab-btn active" onclick="switchTab('tab-geral')">Geral</button>
+                        <button class="tab-btn" onclick="switchTab('tab-fornecedor')">Fornecedor</button>
+                        <button class="tab-btn" onclick="switchTab('tab-pedido')">Pedido</button>
+                        <button class="tab-btn" onclick="switchTab('tab-entrega')">Entrega</button>
+                        <button class="tab-btn" onclick="switchTab('tab-pagamento')">Pagamento</button>
+                    </div>
+
+                    <form id="ordemForm" onsubmit="handleSubmit(event)">
+                        <input type="hidden" id="editId" value="">
+                        
+                        <!-- ABA GERAL -->
+                        <div class="tab-content active" id="tab-geral">
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label for="numeroOrdem">Número da Ordem *</label>
+                                    <input type="text" id="numeroOrdem" value="${nextNumber}" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="responsavel">Responsável *</label>
+                                    <input type="text" id="responsavel" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="dataOrdem">Data da Ordem *</label>
+                                    <input type="date" id="dataOrdem" value="${today}" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ABA FORNECEDOR -->
+                        <div class="tab-content" id="tab-fornecedor">
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label for="razaoSocial">Razão Social *</label>
+                                    <input type="text" id="razaoSocial" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="nomeFantasia">Nome Fantasia</label>
+                                    <input type="text" id="nomeFantasia">
+                                </div>
+                                <div class="form-group">
+                                    <label for="cnpj">CNPJ *</label>
+                                    <input type="text" id="cnpj" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="enderecoFornecedor">Endereço</label>
+                                    <input type="text" id="enderecoFornecedor">
+                                </div>
+                                <div class="form-group">
+                                    <label for="site">Site</label>
+                                    <input type="text" id="site">
+                                </div>
+                                <div class="form-group">
+                                    <label for="contato">Contato</label>
+                                    <input type="text" id="contato">
+                                </div>
+                                <div class="form-group">
+                                    <label for="telefone">Telefone</label>
+                                    <input type="text" id="telefone">
+                                </div>
+                                <div class="form-group">
+                                    <label for="email">E-mail</label>
+                                    <input type="email" id="email">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ABA PEDIDO -->
+                        <div class="tab-content" id="tab-pedido">
+                            <button type="button" onclick="addItem()" class="success small" style="margin-bottom: 1rem;">+ Adicionar Item</button>
+                            <div style="overflow-x: auto;">
+                                <table class="items-table">
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 40px;">Item</th>
+                                            <th style="min-width: 200px;">Especificação</th>
+                                            <th style="width: 80px;">QTD</th>
+                                            <th style="width: 80px;">Unid</th>
+                                            <th style="width: 100px;">Valor UN</th>
+                                            <th style="width: 100px;">IPI</th>
+                                            <th style="width: 100px;">ST</th>
+                                            <th style="width: 120px;">Total</th>
+                                            <th style="width: 80px;">Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="itemsBody"></tbody>
+                                </table>
+                            </div>
+                            <div class="form-group" style="margin-top: 1rem;">
+                                <label for="valorTotalOrdem">Valor Total da Ordem</label>
+                                <input type="text" id="valorTotalOrdem" readonly value="R$ 0,00">
+                            </div>
+                            <div class="form-group">
+                                <label for="frete">Frete</label>
+                                <input type="text" id="frete" placeholder="Ex: CIF, FOB">
+                            </div>
+                        </div>
+
+                        <!-- ABA ENTREGA -->
+                        <div class="tab-content" id="tab-entrega">
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label for="localEntrega">Local de Entrega</label>
+                                    <input type="text" id="localEntrega">
+                                </div>
+                                <div class="form-group">
+                                    <label for="prazoEntrega">Prazo de Entrega</label>
+                                    <input type="text" id="prazoEntrega" placeholder="Ex: 10 dias úteis">
+                                </div>
+                                <div class="form-group">
+                                    <label for="transporte">Transporte</label>
+                                    <input type="text" id="transporte" placeholder="Ex: Por conta do fornecedor">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ABA PAGAMENTO -->
+                        <div class="tab-content" id="tab-pagamento">
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label for="formaPagamento">Forma de Pagamento *</label>
+                                    <input type="text" id="formaPagamento" required placeholder="Ex: Boleto, PIX, Cartão">
+                                </div>
+                                <div class="form-group">
+                                    <label for="prazoPagamento">Prazo de Pagamento *</label>
+                                    <input type="text" id="prazoPagamento" required placeholder="Ex: 30 dias">
+                                </div>
+                                <div class="form-group">
+                                    <label for="dadosBancarios">Dados Bancários</label>
+                                    <textarea id="dadosBancarios" rows="3"></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="modal-actions">
+                            <button type="button" id="btnVoltar" onclick="previousTab()" class="secondary" style="display: none;">Voltar</button>
+                            <button type="button" id="btnProximo" onclick="nextTab()" class="secondary">Próximo</button>
+                            <button type="button" onclick="closeFormModal(true)" class="secondary">Cancelar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    `;
+
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    addItem();
+    setTimeout(() => document.getElementById('numeroOrdem')?.focus(), 100);
 }
 
 function closeFormModal(showCancelMessage = false) {
@@ -189,13 +335,8 @@ function closeFormModal(showCancelMessage = false) {
         }
         
         modal.style.animation = 'fadeOut 0.2s ease forwards';
-        setTimeout(() => modal.classList.remove('show'), 200);
+        setTimeout(() => modal.remove(), 200);
     }
-}
-
-function setTodayDate() {
-    const today = new Date().toISOString().split('T')[0];
-    document.getElementById('dataOrdem').value = today;
 }
 
 // ============================================
@@ -342,29 +483,162 @@ function editOrdem(id) {
     
     editingId = id;
     currentTab = 0;
-    document.getElementById('formTitle').textContent = 'Editar Ordem de Compra';
     
-    document.getElementById('editId').value = ordem.id;
-    document.getElementById('numeroOrdem').value = ordem.numeroOrdem;
-    document.getElementById('responsavel').value = ordem.responsavel;
-    document.getElementById('dataOrdem').value = ordem.dataOrdem;
-    document.getElementById('razaoSocial').value = ordem.razaoSocial;
-    document.getElementById('nomeFantasia').value = ordem.nomeFantasia || '';
-    document.getElementById('cnpj').value = ordem.cnpj;
-    document.getElementById('enderecoFornecedor').value = ordem.enderecoFornecedor || '';
-    document.getElementById('site').value = ordem.site || '';
-    document.getElementById('contato').value = ordem.contato || '';
-    document.getElementById('telefone').value = ordem.telefone || '';
-    document.getElementById('email').value = ordem.email || '';
-    document.getElementById('frete').value = ordem.frete || '';
-    document.getElementById('localEntrega').value = ordem.localEntrega || '';
-    document.getElementById('prazoEntrega').value = ordem.prazoEntrega || '';
-    document.getElementById('transporte').value = ordem.transporte || '';
-    document.getElementById('formaPagamento').value = ordem.formaPagamento;
-    document.getElementById('prazoPagamento').value = ordem.prazoPagamento;
-    document.getElementById('dadosBancarios').value = ordem.dadosBancarios || '';
+    const modalHTML = `
+        <div class="modal-overlay" id="formModal">
+            <div class="modal-content" style="max-width: 1200px;">
+                <div class="modal-header">
+                    <h3 class="modal-title">Editar Ordem de Compra</h3>
+                </div>
+                
+                <div class="tabs-container">
+                    <div class="tabs-nav">
+                        <button class="tab-btn active" onclick="switchTab('tab-geral')">Geral</button>
+                        <button class="tab-btn" onclick="switchTab('tab-fornecedor')">Fornecedor</button>
+                        <button class="tab-btn" onclick="switchTab('tab-pedido')">Pedido</button>
+                        <button class="tab-btn" onclick="switchTab('tab-entrega')">Entrega</button>
+                        <button class="tab-btn" onclick="switchTab('tab-pagamento')">Pagamento</button>
+                    </div>
+
+                    <form id="ordemForm" onsubmit="handleSubmit(event)">
+                        <input type="hidden" id="editId" value="${ordem.id}">
+                        
+                        <!-- ABA GERAL -->
+                        <div class="tab-content active" id="tab-geral">
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label for="numeroOrdem">Número da Ordem *</label>
+                                    <input type="text" id="numeroOrdem" value="${ordem.numeroOrdem}" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="responsavel">Responsável *</label>
+                                    <input type="text" id="responsavel" value="${ordem.responsavel}" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="dataOrdem">Data da Ordem *</label>
+                                    <input type="date" id="dataOrdem" value="${ordem.dataOrdem}" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ABA FORNECEDOR -->
+                        <div class="tab-content" id="tab-fornecedor">
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label for="razaoSocial">Razão Social *</label>
+                                    <input type="text" id="razaoSocial" value="${ordem.razaoSocial}" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="nomeFantasia">Nome Fantasia</label>
+                                    <input type="text" id="nomeFantasia" value="${ordem.nomeFantasia || ''}">
+                                </div>
+                                <div class="form-group">
+                                    <label for="cnpj">CNPJ *</label>
+                                    <input type="text" id="cnpj" value="${ordem.cnpj}" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="enderecoFornecedor">Endereço</label>
+                                    <input type="text" id="enderecoFornecedor" value="${ordem.enderecoFornecedor || ''}">
+                                </div>
+                                <div class="form-group">
+                                    <label for="site">Site</label>
+                                    <input type="text" id="site" value="${ordem.site || ''}">
+                                </div>
+                                <div class="form-group">
+                                    <label for="contato">Contato</label>
+                                    <input type="text" id="contato" value="${ordem.contato || ''}">
+                                </div>
+                                <div class="form-group">
+                                    <label for="telefone">Telefone</label>
+                                    <input type="text" id="telefone" value="${ordem.telefone || ''}">
+                                </div>
+                                <div class="form-group">
+                                    <label for="email">E-mail</label>
+                                    <input type="email" id="email" value="${ordem.email || ''}">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ABA PEDIDO -->
+                        <div class="tab-content" id="tab-pedido">
+                            <button type="button" onclick="addItem()" class="success small" style="margin-bottom: 1rem;">+ Adicionar Item</button>
+                            <div style="overflow-x: auto;">
+                                <table class="items-table">
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 40px;">Item</th>
+                                            <th style="min-width: 200px;">Especificação</th>
+                                            <th style="width: 80px;">QTD</th>
+                                            <th style="width: 80px;">Unid</th>
+                                            <th style="width: 100px;">Valor UN</th>
+                                            <th style="width: 100px;">IPI</th>
+                                            <th style="width: 100px;">ST</th>
+                                            <th style="width: 120px;">Total</th>
+                                            <th style="width: 80px;">Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="itemsBody"></tbody>
+                                </table>
+                            </div>
+                            <div class="form-group" style="margin-top: 1rem;">
+                                <label for="valorTotalOrdem">Valor Total da Ordem</label>
+                                <input type="text" id="valorTotalOrdem" readonly value="${ordem.valorTotal}">
+                            </div>
+                            <div class="form-group">
+                                <label for="frete">Frete</label>
+                                <input type="text" id="frete" value="${ordem.frete || ''}" placeholder="Ex: CIF, FOB">
+                            </div>
+                        </div>
+
+                        <!-- ABA ENTREGA -->
+                        <div class="tab-content" id="tab-entrega">
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label for="localEntrega">Local de Entrega</label>
+                                    <input type="text" id="localEntrega" value="${ordem.localEntrega || ''}">
+                                </div>
+                                <div class="form-group">
+                                    <label for="prazoEntrega">Prazo de Entrega</label>
+                                    <input type="text" id="prazoEntrega" value="${ordem.prazoEntrega || ''}" placeholder="Ex: 10 dias úteis">
+                                </div>
+                                <div class="form-group">
+                                    <label for="transporte">Transporte</label>
+                                    <input type="text" id="transporte" value="${ordem.transporte || ''}" placeholder="Ex: Por conta do fornecedor">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ABA PAGAMENTO -->
+                        <div class="tab-content" id="tab-pagamento">
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label for="formaPagamento">Forma de Pagamento *</label>
+                                    <input type="text" id="formaPagamento" value="${ordem.formaPagamento}" required placeholder="Ex: Boleto, PIX, Cartão">
+                                </div>
+                                <div class="form-group">
+                                    <label for="prazoPagamento">Prazo de Pagamento *</label>
+                                    <input type="text" id="prazoPagamento" value="${ordem.prazoPagamento}" required placeholder="Ex: 30 dias">
+                                </div>
+                                <div class="form-group">
+                                    <label for="dadosBancarios">Dados Bancários</label>
+                                    <textarea id="dadosBancarios" rows="3">${ordem.dadosBancarios || ''}</textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="modal-actions">
+                            <button type="button" id="btnVoltar" onclick="previousTab()" class="secondary" style="display: none;">Voltar</button>
+                            <button type="button" id="btnProximo" onclick="nextTab()" class="secondary">Próximo</button>
+                            <button type="button" onclick="closeFormModal(true)" class="secondary">Cancelar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    `;
+
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
     
-    document.getElementById('itemsBody').innerHTML = '';
     itemCounter = 0;
     ordem.items.forEach(item => {
         addItem();
@@ -377,11 +651,6 @@ function editOrdem(id) {
         row.querySelector('.item-st').value = item.st || '';
         row.querySelector('.item-total').value = item.valorTotal;
     });
-    
-    recalculateOrderTotal();
-    showTab(0);
-    
-    document.getElementById('formModal').classList.add('show');
 }
 
 // ============================================
@@ -406,7 +675,6 @@ async function deleteOrdem(id) {
     showToast('Ordem excluída com sucesso!', 'success');
 }
 
-// Adicionar esta função (igual ao Controle de Frete)
 function showConfirm(message, options = {}) {
     return new Promise((resolve) => {
         const { title = 'Confirmação', confirmText = 'Confirmar', cancelText = 'Cancelar', type = 'warning' } = options;
@@ -554,14 +822,17 @@ function viewOrdem(id) {
 }
 
 function closeInfoModal() {
-    document.getElementById('infoModal').classList.remove('show');
+    const modal = document.getElementById('infoModal');
+    if (modal) {
+        modal.classList.remove('show');
+    }
 }
 
 // ============================================
 // FILTROS
 // ============================================
 function filterOrdens() {
-    updateDisplay();
+    updateTable();
 }
 
 function clearFilters() {
@@ -578,6 +849,7 @@ function updateDisplay() {
     updateMonthDisplay();
     updateDashboard();
     updateTable();
+    updateResponsaveisFilter();
 }
 
 function updateDashboard() {
@@ -585,12 +857,11 @@ function updateDashboard() {
     const totalFechadas = monthOrdens.filter(o => o.status === 'fechada').length;
     const totalAbertas = monthOrdens.filter(o => o.status === 'aberta').length;
     
-    document.getElementById('totalOrdens').textContent = 1249 + ordens.length;
+    document.getElementById('totalOrdens').textContent = monthOrdens.length;
     document.getElementById('totalFechadas').textContent = totalFechadas;
     document.getElementById('totalAbertas').textContent = totalAbertas;
 }
 
-// ⚠️ ADICIONAR ESTA FUNÇÃO COMPLETA AQUI:
 function updateTable() {
     const container = document.getElementById('ordensContainer');
     let filteredOrdens = getOrdensForCurrentMonth();
@@ -649,19 +920,41 @@ function updateTable() {
             <td><strong>${ordem.numeroOrdem}</strong></td>
             <td>${ordem.responsavel}</td>
             <td>${ordem.razaoSocial}</td>
-            <td>${formatDate(ordem.dataOrdem)}</td>
+            <td style="white-space: nowrap;">${formatDate(ordem.dataOrdem)}</td>
             <td><strong>${ordem.valorTotal}</strong></td>
             <td>
                 <span class="badge ${ordem.status}">${ordem.status.toUpperCase()}</span>
             </td>
-           <td class="actions-cell" style="text-align: center; white-space: nowrap;">
-    <button onclick="viewOrdem('${ordem.id}')" class="action-btn view" title="Ver detalhes">Ver</button>
-    <button onclick="editOrdem('${ordem.id}')" class="action-btn edit" title="Editar">Editar</button>
-    <button onclick="generatePDFFromTable('${ordem.id}')" class="action-btn success" title="Gerar PDF">PDF</button>
-    <button onclick="deleteOrdem('${ordem.id}')" class="action-btn delete" title="Excluir">Excluir</button>
-</td>
+            <td class="actions-cell" style="text-align: center; white-space: nowrap;">
+                <button onclick="viewOrdem('${ordem.id}')" class="action-btn view" title="Ver detalhes">Ver</button>
+                <button onclick="editOrdem('${ordem.id}')" class="action-btn edit" title="Editar">Editar</button>
+                <button onclick="generatePDFFromTable('${ordem.id}')" class="action-btn success" title="Gerar PDF">PDF</button>
+                <button onclick="deleteOrdem('${ordem.id}')" class="action-btn delete" title="Excluir">Excluir</button>
+            </td>
         </tr>
     `).join('');
+}
+
+function updateResponsaveisFilter() {
+    const responsaveis = new Set();
+    ordens.forEach(o => {
+        if (o.responsavel?.trim()) {
+            responsaveis.add(o.responsavel.trim());
+        }
+    });
+
+    const select = document.getElementById('filterResponsavel');
+    if (select) {
+        const currentValue = select.value;
+        select.innerHTML = '<option value="">Todos</option>';
+        Array.from(responsaveis).sort().forEach(r => {
+            const option = document.createElement('option');
+            option.value = r;
+            option.textContent = r;
+            select.appendChild(option);
+        });
+        select.value = currentValue;
+    }
 }
 
 // ============================================
@@ -745,8 +1038,8 @@ function generatePDFForOrdem(ordem) {
     try {
         const logo = new Image();
         logo.src = 'I.R.-COMERCIO-E-MATERIAIS-ELETRICOS-LTDA.png';
-        doc.addImage(logo, 'PNG', margin, y, 40, 15); // x, y, largura, altura
-        y += 18; // Ajusta posição após a logo
+        doc.addImage(logo, 'PNG', margin, y, 40, 15);
+        y += 18;
     } catch (error) {
         console.log('Logo não encontrada');
     }
@@ -774,22 +1067,22 @@ function generatePDFForOrdem(ordem) {
     doc.setFont(undefined, 'bold');
     doc.text('I.R. COMÉRCIO E MATERIAIS ELÉTRICOS LTDA', margin, y);
     
-     y += lineHeight + 1;
+    y += lineHeight + 1;
     doc.setFontSize(11);
     doc.setFont(undefined, 'normal');
     doc.text('CNPJ: 33.149.502/0001-38  |  IE: 083.780.74-2', margin, y);
     
-     y += lineHeight + 1;
+    y += lineHeight + 1;
     doc.setFontSize(11);
     doc.setFont(undefined, 'normal');
     doc.text('RUA TADORNA Nº 472, SALA 2', margin, y);
     
-     y += lineHeight + 1;
+    y += lineHeight + 1;
     doc.setFontSize(11);
     doc.setFont(undefined, 'normal');
     doc.text('NOVO HORIZONTE - SERRA/ES  |  CEP: 29.163-318', margin, y);
     
-     y += lineHeight + 1;
+    y += lineHeight + 1;
     doc.setFontSize(11);
     doc.setFont(undefined, 'normal');
     doc.text('TELEFAX: (27) 3209-4291  |  E-MAIL: COMERCIAL.IRCOMERCIO@GMAIL.COM', margin, y);
@@ -807,35 +1100,45 @@ function generatePDFForOrdem(ordem) {
     doc.setFont(undefined, 'bold');
     doc.text(`${ordem.razaoSocial}`, margin, y);
 
-    y += lineHeight + 1;
-    doc.setFontSize(11);
-    doc.setFont(undefined, 'normal');
-    doc.text(`${ordem.nomeFantasia}`, margin, y);
+    if (ordem.nomeFantasia) {
+        y += lineHeight + 1;
+        doc.setFontSize(11);
+        doc.setFont(undefined, 'normal');
+        doc.text(`${ordem.nomeFantasia}`, margin, y);
+    }
 
     y += lineHeight + 1;
     doc.setFontSize(11);
     doc.setFont(undefined, 'normal');
     doc.text(`${ordem.cnpj}`, margin, y);
 
-    y += lineHeight + 1;
-    doc.setFontSize(11);
-    doc.setFont(undefined, 'normal');
-    doc.text(`${ordem.enderecoFornecedor}`, margin, y);
+    if (ordem.enderecoFornecedor) {
+        y += lineHeight + 1;
+        doc.setFontSize(11);
+        doc.setFont(undefined, 'normal');
+        doc.text(`${ordem.enderecoFornecedor}`, margin, y);
+    }
 
-    y += lineHeight + 1;
-    doc.setFontSize(11);
-    doc.setFont(undefined, 'normal');
-    doc.text(`${ordem.contato}`, margin, y);
+    if (ordem.contato) {
+        y += lineHeight + 1;
+        doc.setFontSize(11);
+        doc.setFont(undefined, 'normal');
+        doc.text(`${ordem.contato}`, margin, y);
+    }
 
-    y += lineHeight;
-    doc.setFontSize(11);
-    doc.setFont(undefined, 'normal');
-    doc.text(`${ordem.telefone}`, margin, y);
+    if (ordem.telefone) {
+        y += lineHeight;
+        doc.setFontSize(11);
+        doc.setFont(undefined, 'normal');
+        doc.text(`${ordem.telefone}`, margin, y);
+    }
 
-    y += lineHeight + 1;
-    doc.setFontSize(11);
-    doc.setFont(undefined, 'normal');
-    doc.text(`${ordem.email}`, margin, y);
+    if (ordem.email) {
+        y += lineHeight + 1;
+        doc.setFontSize(11);
+        doc.setFont(undefined, 'normal');
+        doc.text(`${ordem.email}`, margin, y);
+    }
     
     y += 10;
     
@@ -849,14 +1152,14 @@ function generatePDFForOrdem(ordem) {
     // Configuração da tabela de itens
     const tableWidth = pageWidth - (2 * margin);
     const colWidths = {
-        item: tableWidth * 0.05,          // 5%
-        especificacao: tableWidth * 0.35,    // 35%
-        qtd: tableWidth * 0.08,              // 8%
-        unid: tableWidth * 0.08,             // 8%
-        valorUn: tableWidth * 0.12,          // 12%
-        ipi: tableWidth * 0.10,              // 10%
-        st: tableWidth * 0.10,               // 10%
-        total: tableWidth * 0.12             // 12%
+        item: tableWidth * 0.05,
+        especificacao: tableWidth * 0.35,
+        qtd: tableWidth * 0.08,
+        unid: tableWidth * 0.08,
+        valorUn: tableWidth * 0.12,
+        ipi: tableWidth * 0.10,
+        st: tableWidth * 0.10,
+        total: tableWidth * 0.12
     };
     
     const itemRowHeight = 10;
@@ -923,13 +1226,11 @@ function generatePDFForOrdem(ordem) {
     doc.setFontSize(8);
     
     ordem.items.forEach((item, index) => {
-        // Calcula altura necessária para a especificação
-        const maxWidth = colWidths.especificacao - 6; // margem interna
+        const maxWidth = colWidths.especificacao - 6;
         const especLines = doc.splitTextToSize(item.especificacao, maxWidth);
         const lineCount = especLines.length;
         const necessaryHeight = Math.max(itemRowHeight, lineCount * 4 + 4);
         
-        // Verifica se precisa de nova página (deixa margem de 30 na parte inferior)
         if (y + necessaryHeight > doc.internal.pageSize.height - 40) {
             doc.addPage();
             y = 20;
@@ -974,7 +1275,6 @@ function generatePDFForOrdem(ordem) {
             doc.setFontSize(8);
         }
         
-        // Linha zebrada
         if (index % 2 !== 0) {
             doc.setFillColor(240, 240, 240);
             doc.rect(margin, y, tableWidth, necessaryHeight, 'F');
@@ -982,53 +1282,43 @@ function generatePDFForOrdem(ordem) {
         
         xPos = margin;
         
-        // Bordas verticais
         doc.setDrawColor(180, 180, 180);
         doc.setLineWidth(0.3);
         doc.line(xPos, y, xPos, y + necessaryHeight);
         
-        // ITEM - centralizado verticalmente
         doc.text(item.item.toString(), xPos + (colWidths.item / 2), y + (necessaryHeight / 2) + 1.5, { align: 'center' });
         xPos += colWidths.item;
         doc.line(xPos, y, xPos, y + necessaryHeight);
         
-        // ESPECIFICAÇÃO - com quebra de linha
         doc.text(especLines, xPos + 3, y + 4);
         xPos += colWidths.especificacao;
         doc.line(xPos, y, xPos, y + necessaryHeight);
         
-        // QTD - centralizado
         doc.text(item.quantidade.toString(), xPos + (colWidths.qtd / 2), y + (necessaryHeight / 2) + 1.5, { align: 'center' });
         xPos += colWidths.qtd;
         doc.line(xPos, y, xPos, y + necessaryHeight);
         
-        // UNID - centralizado
         doc.text(item.unidade, xPos + (colWidths.unid / 2), y + (necessaryHeight / 2) + 1.5, { align: 'center' });
         xPos += colWidths.unid;
         doc.line(xPos, y, xPos, y + necessaryHeight);
         
-        // VALOR UN - centralizado
         const valorUnFormatted = 'R$ ' + item.valorUnitario.toFixed(2).replace('.', ',');
         doc.text(valorUnFormatted, xPos + (colWidths.valorUn / 2), y + (necessaryHeight / 2) + 1.5, { align: 'center' });
         xPos += colWidths.valorUn;
         doc.line(xPos, y, xPos, y + necessaryHeight);
         
-        // IPI - centralizado
         doc.text(item.ipi || '-', xPos + (colWidths.ipi / 2), y + (necessaryHeight / 2) + 1.5, { align: 'center' });
         xPos += colWidths.ipi;
         doc.line(xPos, y, xPos, y + necessaryHeight);
         
-        // ST - centralizado
         doc.text(item.st || '-', xPos + (colWidths.st / 2), y + (necessaryHeight / 2) + 1.5, { align: 'center' });
         xPos += colWidths.st;
         doc.line(xPos, y, xPos, y + necessaryHeight);
         
-        // TOTAL - centralizado
         doc.text(item.valorTotal, xPos + (colWidths.total / 2), y + (necessaryHeight / 2) + 1.5, { align: 'center' });
         xPos += colWidths.total;
         doc.line(xPos, y, xPos, y + necessaryHeight);
         
-        // Borda horizontal inferior
         doc.line(margin, y + necessaryHeight, margin + tableWidth, y + necessaryHeight);
         
         y += necessaryHeight;
@@ -1047,7 +1337,7 @@ function generatePDFForOrdem(ordem) {
     
     y += 10;
     
-    // LOCAL DE ENTREGA (FIXO)
+    // LOCAL DE ENTREGA
     if (y > doc.internal.pageSize.height - 70) {
         doc.addPage();
         y = 20;
@@ -1058,7 +1348,7 @@ function generatePDFForOrdem(ordem) {
     y += 5;
     doc.setFontSize(11);
     doc.setFont(undefined, 'normal');
-    doc.text('Rua Tadorna nº 472, sala 2, Novo Horizonte - Serra/ES  |  CEP: 29.163-318', margin, y);
+    doc.text(ordem.localEntrega || 'Rua Tadorna nº 472, sala 2, Novo Horizonte - Serra/ES  |  CEP: 29.163-318', margin, y);
     
     y += 10;
     
@@ -1072,110 +1362,13 @@ function generatePDFForOrdem(ordem) {
     doc.text('PRAZO DE ENTREGA:', margin, y);
     doc.setFont(undefined, 'normal');
     doc.setFontSize(11);
-    doc.text(ordem.prazoEntrega, margin + 42, y);
+    doc.text(ordem.prazoEntrega || '-', margin + 42, y);
     
     doc.setFont(undefined, 'bold');
     doc.setFontSize(11);
     doc.text('FRETE:', pageWidth - margin - 35, y);
     doc.setFont(undefined, 'normal');
     doc.setFontSize(11);
-    doc.text(ordem.frete, pageWidth - margin - 20, y);
+    doc.text(ordem.frete || '-', pageWidth - margin - 20, y);
     
     y += 10;
-    
-    // DADOS DO PAGAMENTO
-    if (y > doc.internal.pageSize.height - 50) {
-        doc.addPage();
-        y = 20;
-    }
-    doc.setFontSize(11);
-    doc.setFont(undefined, 'bold');
-    doc.text('DADOS DO PAGAMENTO', margin, y);
-    
-    y += 6;
-    doc.setFontSize(11);
-    doc.setFont(undefined, 'normal');
-    doc.text(`Forma de Pagamento: ${ordem.formaPagamento}`, margin, y);
-    
-    y += 5;
-    doc.setFontSize(11);
-    doc.setFont(undefined, 'normal');
-    doc.text(`Prazo de Pagamento: ${ordem.prazoPagamento}`, margin, y);
-    
-    if (ordem.dadosBancarios) {
-        y += 5;
-        doc.setFontSize(11);
-    doc.setFont(undefined, 'normal');
-        doc.text(`Dados Bancários: ${ordem.dadosBancarios}`, margin, y);
-    }
-    
-    y += 12;
-    
-    // DATA E ASSINATURA
-    if (y > doc.internal.pageSize.height - 40) {
-        doc.addPage();
-        y = 20;
-    }
-    const dataOrdem = new Date(ordem.dataOrdem + 'T00:00:00');
-    const dia = dataOrdem.getDate();
-    const meses = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 
-                   'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
-    const mes = meses[dataOrdem.getMonth()];
-    const ano = dataOrdem.getFullYear();
-    
-    doc.setFontSize(10);
-    doc.text(`Serra/ES, ${dia} de ${mes} de ${ano}`, pageWidth / 2, y, { align: 'center' });
-    
-    y += 10;
-    
-    // ASSINATURA (IMAGEM)
-    try {
-        const assinatura = new Image();
-        assinatura.src = 'assinatura.png.png'; // ou o nome correto do arquivo
-        doc.addImage(assinatura, 'PNG', pageWidth / 2 - 25, y - 10, 50, 15); // centralizada
-        y += 10;
-    } catch (error) {
-        console.log('Assinatura não encontrada');
-        // Linha de assinatura (fallback se não encontrar a imagem)
-        doc.setLineWidth(0.5);
-        doc.line(pageWidth / 2 - 30, y, pageWidth / 2 + 30, y);
-        y += 5;
-    }
-    
-    doc.setFontSize(9);
-    doc.setFont(undefined, 'bold');
-    doc.text('Rosemeire Bicalho de Lima Gravino', pageWidth / 2, y, { align: 'center' });
-    
-    y += 5;
-    doc.setFont(undefined, 'normal');
-    doc.text('Diretora', pageWidth / 2, y, { align: 'center' });
-    
-    y += 12;
-    
-    // ATENÇÃO SR. FORNECEDOR
-    if (y > doc.internal.pageSize.height - 30) {
-        doc.addPage();
-        y = 20;
-    }
-    doc.setFontSize(10);
-    doc.setFont(undefined, 'bold');
-    doc.setTextColor(204, 112, 0);
-    doc.text('ATENÇÃO SR. FORNECEDOR', pageWidth / 2, y, { align: 'center' });
-    
-    y += 6;
-    doc.setFontSize(9);
-    doc.setTextColor(0, 0, 0);
-    doc.setFont(undefined, 'normal');
-    doc.text(`1. GENTILEZA MENCIONAR NA NOTA FISCAL O Nº ${ordem.numeroOrdem}`, pageWidth / 2, y, { align: 'center' });
-    
-    y += 5;
-    doc.text('2. FAVOR ENVIAR A NOTA FISCAL ELETRÔNICA (.XML) PARA: FINANCEIRO.IRCOMERCIO@GMAIL.COM', pageWidth / 2, y, { align: 'center' });
-    
-    // Salvar PDF
-    doc.save(`Ordem_${ordem.numeroOrdem}.pdf`);
-    showToast('PDF gerado com sucesso!', 'success');
-}
-setTimeout(() => {
-        const splash = document.getElementById('splashScreen');
-        if (splash) splash.style.display = 'none';
-    }, 3000);
