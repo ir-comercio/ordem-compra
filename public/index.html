@@ -45,6 +45,17 @@
     </div>
 </div>
 
+        <div class="card">
+    <div class="button-wrapper">
+        <button class="register" onclick="openFormModal()">
+            + Nova Ordem de Compra
+        </button>
+    </div>
+</div>
+        
+        <div class="card">
+    <div class="month-navigation">
+
             <!-- Filters -->
             <div class="filter-section">
                 <div class="form-group">
@@ -88,13 +99,13 @@
                     <thead>
                         <tr>
                             <th style="width: 80px;">Fechada</th>
-                            <th>NÂº Ordem</th>
-                            <th>ResponsÃ¡vel</th>
+                            <th>Nº Ordem</th>
+                            <th>Responsável</th>
                             <th>Fornecedor</th>
                             <th>Data</th>
                             <th>Valor Total</th>
                             <th>Status</th>
-                            <th>AÃ§Ãµes</th>
+                            <th>Ações</th>
                         </tr>
                     </thead>
                     <tbody id="ordensContainer">
@@ -112,10 +123,9 @@
     <!-- Form Modal -->
     <div id="formModal" class="modal-overlay">
         <div class="modal-content">
-            <div class="modal-header">
-                <h3 id="formTitle">Nova Ordem de Compra</h3>
-                <button class="close-modal" onclick="closeFormModal()">Ã—</button>
-            </div>
+           <div class="modal-header">
+    <h3 class="modal-title" id="formTitle">Nova Ordem de Compra</h3>
+</div>
             
             <form id="ordemForm" onsubmit="handleSubmit(event)">
                 <input type="hidden" id="editId">
@@ -285,13 +295,10 @@
                     </div>
                 </div>
 
-                <div class="modal-actions" id="formActions">
-                    <button type="button" class="secondary" id="btnVoltar" onclick="previousTab()" style="display: none;">
-                        Voltar
-                    </button>
-                    <button type="button" id="btnProximo" onclick="nextTab()">
-                        PrÃ³ximo
-                    </button>
+<div class="modal-actions" id="formActions">
+    <button type="button" class="secondary" onclick="closeFormModal()">
+        Cancelar
+    </button>
                 </div>
             </form>
         </div>
@@ -300,10 +307,9 @@
     <!-- Info Modal -->
     <div id="infoModal" class="modal-overlay">
         <div class="modal-content">
-            <div class="modal-header">
-                <h3>Ordem de Compra NÂº <span id="modalNumero"></span></h3>
-                <button class="close-modal" onclick="closeInfoModal()">Ã—</button>
-            </div>
+           <div class="modal-header">
+    <h3 class="modal-title">Ordem de Compra Nº <span id="modalNumero"></span></h3>
+</div>
             
             <!-- Tabs for Info Modal -->
             <div class="tabs-container">
