@@ -40,15 +40,9 @@ async function checkServerStatus() {
 }
 
 function updateConnectionStatus() {
-    const statusDiv = document.getElementById('connectionStatus');
-    if (!statusDiv) return;
-
-    if (isOnline) {
-        statusDiv.className = 'connection-status online';
-        statusDiv.querySelector('span:last-child').textContent = 'Online';
-    } else {
-        statusDiv.className = 'connection-status offline';
-        statusDiv.querySelector('span:last-child').textContent = 'Offline';
+    const statusElement = document.getElementById('connectionStatus');
+    if (statusElement) {
+        statusElement.className = isOnline ? 'connection-status online' : 'connection-status offline';
     }
 }
 
@@ -537,88 +531,38 @@ function updateDashboard() {
     document.getElementById('totalAbertas').textContent = totalAbertas;
 }
 
-function updateTable() {
-    const container = document.getElementById('ordensContainer');
-    let filteredOrdens = getOrdensForCurrentMonth();
-    
-    const search = document.getElementById('search').value.toLowerCase();
-    const filterResp = document.getElementById('filterResponsavel').value;
-    const filterStatus = document.getElementById('filterStatus').value;
-    
-    if (search) {
-        filteredOrdens = filteredOrdens.filter(o => 
-            o.numeroOrdem.toLowerCase().includes(search) ||
-            o.razaoSocial.toLowerCase().includes(search) ||
-            o.responsavel.toLowerCase().includes(search)
-        );
-    }
-    
-    if (filterResp) {
-        filteredOrdens = filteredOrdens.filter(o => o.responsavel === filterResp);
-    }
-    
-    if (filterStatus) {
-        filteredOrdens = filteredOrdens.filter(o => o.status === filterStatus);
-    }
-    
-    if (filteredOrdens.length === 0) {
-        container.innerHTML = `
-            <tr>
-                <td colspan="8" style="text-align: center; padding: 2rem;">
-                    Nenhuma ordem encontrada
-                </td>
-            </tr>
-        `;
-        return;
-    }
-    
-    filteredOrdens.sort((a, b) => {
-        const numA = parseInt(a.numeroOrdem);
-        const numB = parseInt(b.numeroOrdem);
-        return numA - numB;
-    });
-    
-    container.innerHTML = filteredOrdens.map(ordem => `
-        <tr class="${ordem.status}">
-           <td style="text-align: center; padding: 8px;">
-    <div class="checkbox-wrapper">
-        <input 
-            type="checkbox" 
-            id="check-${ordem.id}"
-            ${ordem.status === 'fechada' ? 'checked' : ''}
-            onchange="toggleStatus('${ordem.id}')"
-            class="styled-checkbox"
-        >
-        <label for="check-${ordem.id}" class="checkbox-label-styled"></label>
-    </div>
-</td>
-            <td><strong>${ordem.numeroOrdem}</strong></td>
-            <td>${ordem.responsavel}</td>
-            <td>${ordem.razaoSocial}</td>
-            <td>${formatDate(ordem.dataOrdem)}</td>
-            <td><strong>${ordem.valorTotal}</strong></td>
-            <td>
-                <span class="badge ${ordem.status}">${ordem.status.toUpperCase()}</span>
-            </td>
-            <td>
-                <div class="actions">
-                    <button class="small" onclick="viewOrdem('${ordem.id}')" title="Ver detalhes">
-                        Ver
-                    </button>
-                    <button class="small secondary" onclick="editOrdem('${ordem.id}')" title="Editar">
-                        Editar
-                    </button>
-                    <button class="small success" onclick="generatePDFFromTable('${ordem.id}')" title="Gerar PDF">
-                        PDF
-                    </button>
-                    <button class="small danger" onclick="deleteOrdem('${ordem.id}')" title="Excluir">
-                        Excluir
-                    </button>
-                </div>
-            </td>
-        </tr>
-    `).join('');
-}
+container.innerHTML = filteredOrdens.map(ordem => `
+    <tr class="${ordem.status === 'fechada' ? 'row-fechada' : ''}">
+        <td style="text-align: center; padding: 8px;">
+            <div class="checkbox-wrapper">
+                <input 
+                    type="checkbox" 
+                    id="check-${ordem.id}"
+                    ${ordem.status === 'fechada' ? 'checked' : ''}
+                    onchange="toggleStatus('${ordem.id}')"
+                    class="styled-checkbox"
+                >
+                <label for="check-${ordem.id}" class="checkbox-label-styled"></label>
+            </div>
+        </td>
+        <td><strong>${ordem.numeroOrdem}</strong></td>
+        <td>${ordem.responsavel}</td>
+        <td>${ordem.razaoSocial}</td>
+        <td>${formatDate(ordem.dataOrdem)}</td>
+        <td><strong>${ordem.valorTotal}</strong></td>
+        <td>
+            <span class="badge ${ordem.status}">${ordem.status.toUpperCase()}</span>
+        </td>
+        <td>
+            <div class="actions">
+                <button class="small" onclick="viewOrdem('${ordem.id}')" title="Ver detalhes">Ver</button>
+                <button class="small secondary" onclick="editOrdem('${ordem.id}')" title="Editar">Editar</button>
+                <button class="small success" onclick="generatePDFFromTable('${ordem.id}')" title="Gerar PDF">PDF</button>
+                <button class="small danger" onclick="deleteOrdem('${ordem.id}')" title="Excluir">Excluir</button>
+            </div>
+        </td>
+    </tr>
+`).join('');
 
 // ============================================
 // UTILIDADES
