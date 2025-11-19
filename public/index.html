@@ -8,42 +8,46 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <div class="splash-screen" id="splashScreen">
+    <h1 class="splash-title">Ordens de Compra</h1>
+</div>
+    <div class="app-content">
     <div class="container">
         <!-- Header -->
         <div class="header">
-            <h1>Ordem de Compra</h1>
-            <div id="connectionStatus" class="connection-status offline">
-                <span class="status-dot"></span>
-                <span>Verificando...</span>
-            </div>
-        </div>
+    <h1>Ordens de Compra</h1>
+    <div id="connectionStatus" class="connection-status offline">
+        <span class="status-dot"></span>
+    </div>
+</div>
 
         <!-- Dashboard -->
-        <div class="dashboard">
-            <div class="dashboard-card success">
-                <h3>Ordens Fechadas</h3>
-                <div class="value" id="totalFechadas">0</div>
-            </div>
-            <div class="dashboard-card danger">
-                <h3>Ordens Abertas</h3>
-                <div class="value" id="totalAbertas">0</div>
-            </div>
-            <div class="dashboard-card blue">
-                <h3>Total de Ordens</h3>
-                <div class="value" id="totalOrdens">1249</div>
-            </div>
-        </div>
+        <div class="dashboard-grid">
+    <div class="stat-card">
+        <div class="stat-label">Ordens Fechadas</div>
+        <div class="stat-value stat-success" id="totalFechadas">0</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Ordens Abertas</div>
+        <div class="stat-value stat-danger" id="totalAbertas">0</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Total de Ordens</div>
+        <div class="stat-value" id="totalOrdens">1249</div>
+    </div>
+</div>
 
         <button onclick="openFormModal()" style="margin-bottom: 2rem;">
             Nova Ordem de Compra
         </button>
 
         <div class="card">
-            <div class="month-selector">
-                <button onclick="changeMonth(-1)">â† Anterior</button>
-                <span id="currentMonth"></span>
-                <button onclick="changeMonth(1)">PrÃ³ximo â†’</button>
-            </div>
+    <div class="month-navigation">
+        <button onclick="changeMonth(-1)" class="month-nav-btn">Anterior</button>
+        <h3 id="currentMonth" class="month-display">Carregando...</h3>
+        <button onclick="changeMonth(1)" class="month-nav-btn">Próximo</button>
+    </div>
+</div>
 
             <!-- Filters -->
             <div class="filter-section">
