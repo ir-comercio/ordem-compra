@@ -595,14 +595,12 @@ function updateTable() {
             <td>
                 <span class="badge ${ordem.status}">${ordem.status.toUpperCase()}</span>
             </td>
-            <td>
-                <div class="actions">
-                    <button class="small" onclick="viewOrdem('${ordem.id}')" title="Ver detalhes">Ver</button>
-                    <button class="small secondary" onclick="editOrdem('${ordem.id}')" title="Editar">Editar</button>
-                    <button class="small success" onclick="generatePDFFromTable('${ordem.id}')" title="Gerar PDF">PDF</button>
-                    <button class="small danger" onclick="deleteOrdem('${ordem.id}')" title="Excluir">Excluir</button>
-                </div>
-            </td>
+           <td class="actions-cell" style="text-align: center; white-space: nowrap;">
+    <button onclick="viewOrdem('${ordem.id}')" class="action-btn view" title="Ver detalhes">Ver</button>
+    <button onclick="editOrdem('${ordem.id}')" class="action-btn edit" title="Editar">Editar</button>
+    <button onclick="generatePDFFromTable('${ordem.id}')" class="action-btn success" title="Gerar PDF">PDF</button>
+    <button onclick="deleteOrdem('${ordem.id}')" class="action-btn delete" title="Excluir">Excluir</button>
+</td>
         </tr>
     `).join('');
 }
@@ -637,13 +635,18 @@ function formatCurrency(value) {
 }
 
 function showToast(message, type = 'success') {
-    const toast = document.createElement('div');
-    toast.className = `toast ${type}`;
-    toast.textContent = message;
-    document.body.appendChild(toast);
+    const oldMessages = document.querySelectorAll('.floating-message');
+    oldMessages.forEach(msg => msg.remove());
+    
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `floating-message ${type}`;
+    messageDiv.textContent = message;
+    
+    document.body.appendChild(messageDiv);
     
     setTimeout(() => {
-        toast.remove();
+        messageDiv.style.animation = 'slideOut 0.3s ease forwards';
+        setTimeout(() => messageDiv.remove(), 300);
     }, 3000);
 }
 
