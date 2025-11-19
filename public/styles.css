@@ -22,6 +22,11 @@
     --th-border: #5A5A5A;
     --status-border: rgba(255, 255, 255, 0.1);
     --shadow: rgba(0, 0, 0, 0.3);
+    --btn-register: #0077c7;
+    --btn-delete: #e70000;
+    --btn-edit: #777777;
+    --btn-view: #fa7000;
+    --btn-save: #00cc77;
 }
 
 /* ============================================
@@ -53,6 +58,18 @@
     box-sizing: border-box;
 }
 
+body {
+    font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    line-height: 1.6;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    overflow-y: scroll;
+}
+
+/* ============================================
+   SPLASH SCREEN
+   ============================================ */
 .splash-screen {
     position: fixed;
     top: 0;
@@ -95,36 +112,9 @@
     to { opacity: 1; }
 }
 
-/* Após .modal-title */
-.modal-title {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: var(--text-primary);
-    margin: 0;
-}
-
-/* Adicionar wrapper de botão */
-.button-wrapper { 
-    margin-bottom: 1.5rem; 
-}
-
-/* Ajustar primary nos botões do modal */
-button.primary {
-    background: var(--primary);
-}
-
-button.primary:hover:not(:disabled) {
-    background: var(--primary-light);
-}
-
-body {
-    font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
-    background: var(--bg-secondary);
-    color: var(--text-primary);
-    line-height: 1.6;
-    transition: background-color 0.3s ease, color 0.3s ease;
-}
-
+/* ============================================
+   CONTAINER E LAYOUT
+   ============================================ */
 .container {
     max-width: 1800px;
     margin: 2rem auto;
@@ -135,7 +125,7 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 2rem;
+    margin-bottom: 1rem;
     flex-wrap: wrap;
     gap: 1rem;
 }
@@ -163,6 +153,9 @@ h2 {
     box-shadow: var(--card-shadow);
 }
 
+/* ============================================
+   STATUS DE CONEXÃO
+   ============================================ */
 .connection-status {
     display: flex;
     align-items: center;
@@ -201,8 +194,9 @@ h2 {
     100% { box-shadow: 0 0 0 0 rgba(231, 0, 0, 0); }
 }
 
-
-/* Dashboard */
+/* ============================================
+   DASHBOARD
+   ============================================ */
 .dashboard-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -247,7 +241,9 @@ h2 {
     font-weight: 800;
 }
 
-/* Buttons */
+/* ============================================
+   BOTÕES
+   ============================================ */
 button {
     background: var(--primary);
     color: white;
@@ -266,7 +262,13 @@ button {
 }
 
 button:hover:not(:disabled) {
-    background: var(--primary-light);
+    opacity: 0.9;
+}
+
+button:disabled {
+    background: #4B5563;
+    cursor: not-allowed;
+    opacity: 0.5;
 }
 
 button.secondary {
@@ -299,27 +301,23 @@ button.small {
 }
 
 button.register, button[onclick*="openFormModal"] { 
-    background: #0077c7; 
+    background: var(--btn-register); 
 }
 
 button.danger, button.delete, button[onclick*="deleteOrdem"] { 
-    background: #e70000; 
+    background: var(--btn-delete); 
 }
 
 button.edit, button[onclick*="editOrdem"] { 
-    background: #777777; 
+    background: var(--btn-edit); 
 }
 
 button.view, button[onclick*="viewOrdem"] { 
-    background: #fa7000; 
+    background: var(--btn-view); 
 }
 
 button.success, button.save, button[type="submit"], button[onclick*="generatePDF"] { 
-    background: #00cc77; 
-}
-
-button.secondary { 
-    background: #4B5563; 
+    background: var(--btn-save); 
 }
 
 .action-btn {
@@ -334,7 +332,13 @@ button.secondary {
     min-width: 260px;
 }
 
-/* Form */
+.button-wrapper { 
+    margin-bottom: 1.5rem; 
+}
+
+/* ============================================
+   FORMULÁRIOS
+   ============================================ */
 .form-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -382,7 +386,9 @@ input[readonly], select[disabled], textarea[readonly] {
     opacity: 0.9;
 }
 
-/* Month Selector */
+/* ============================================
+   NAVEGAÇÃO POR MESES
+   ============================================ */
 .month-navigation {
     display: flex;
     align-items: center;
@@ -425,14 +431,18 @@ input[readonly], select[disabled], textarea[readonly] {
     transform: translateY(0);
 }
 
-/* Filters */
+/* ============================================
+   FILTROS
+   ============================================ */
 .filter-section {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     gap: 1rem;
 }
 
-/* Table */
+/* ============================================
+   TABELAS
+   ============================================ */
 .table-container {
     overflow-x: auto;
 }
@@ -481,12 +491,22 @@ tbody tr:hover {
     background: var(--table-hover);
 }
 
-tbody tr.fechada {
+tbody tr.row-fechada {
     background: rgba(34, 197, 94, 0.1) !important;
     border-left: 3px solid var(--success-color);
 }
 
-/* Badge */
+tbody tr.row-fechada:hover {
+    background: rgba(34, 197, 94, 0.15) !important;
+}
+
+tbody tr:nth-child(even).row-fechada {
+    background: rgba(34, 197, 94, 0.12) !important;
+}
+
+/* ============================================
+   BADGE
+   ============================================ */
 .badge {
     display: inline-block;
     padding: 6px 14px;
@@ -507,6 +527,9 @@ tbody tr.fechada {
     border: 1px solid rgba(34, 197, 94, 0.3);
 }
 
+/* ============================================
+   FLOATING MESSAGES
+   ============================================ */
 .floating-message {
     position: fixed;
     top: 24px;
@@ -545,7 +568,9 @@ tbody tr.fechada {
     }
 }
 
-/* Checkbox Button */
+/* ============================================
+   CHECKBOX CUSTOMIZADO
+   ============================================ */
 .checkbox-wrapper {
     display: inline-flex;
     align-items: center;
@@ -590,20 +615,9 @@ tbody tr.fechada {
     font-weight: 700;
 }
 
-.row-fechada {
-    background-color: rgba(34, 197, 94, 0.1) !important;
-}
-
-.row-fechada:hover {
-    background-color: rgba(34, 197, 94, 0.15) !important;
-}
-
-tbody tr:nth-child(even).row-fechada {
-    background-color: rgba(34, 197, 94, 0.12) !important;
-}
-
-
-/* Modal */
+/* ============================================
+   MODAL
+   ============================================ */
 .modal-overlay {
     display: none;
     position: fixed;
@@ -655,6 +669,13 @@ tbody tr:nth-child(even).row-fechada {
     border-bottom: 2px solid var(--border-color);
 }
 
+.modal-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+}
+
 .close-modal {
     background: none;
     border: none;
@@ -685,7 +706,9 @@ tbody tr:nth-child(even).row-fechada {
     min-width: 120px; 
 }
 
-/* Tabs System */
+/* ============================================
+   SISTEMA DE ABAS
+   ============================================ */
 .tabs-container {
     margin-bottom: 1.5rem;
 }
@@ -760,7 +783,9 @@ tbody tr:nth-child(even).row-fechada {
     }
 }
 
-/* Items Table */
+/* ============================================
+   TABELA DE ITENS
+   ============================================ */
 .items-table {
     width: 100%;
     margin: 1rem 0;
@@ -783,6 +808,7 @@ tbody tr:nth-child(even).row-fechada {
     display: flex;
     gap: 0.5rem;
 }
+
 .actions {
     display: flex;
     gap: 8px;
@@ -793,7 +819,9 @@ tbody tr:nth-child(even).row-fechada {
     display: none !important;
 }
 
-/* Info Modal Styling */
+/* ============================================
+   INFO SECTION
+   ============================================ */
 .info-section {
     margin-bottom: 1.5rem;
 }
@@ -811,56 +839,30 @@ tbody tr:nth-child(even).row-fechada {
     line-height: 1.6;
 }
 
-/* Open Orders Modal */
-#openOrdersModal .modal-content {
-    animation: slideDown 0.3s ease;
-}
-
-@keyframes slideDown {
-    from {
-        opacity: 0;
-        transform: translateY(-30px) scale(0.95);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-    }
-}
-
-#openOrdersModal tbody tr {
-    transition: all 0.2s ease;
-}
-
-#openOrdersModal tbody tr:hover {
-    background: var(--table-hover) !important;
-    transform: scale(1.01);
-    box-shadow: 0 2px 8px var(--shadow);
-}
-
-#openOrdersModal h3 {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-#openOrdersModal #openOrdersCount {
-    color: var(--primary-light);
-    font-size: 1.6rem;
-}
-
-/* Responsive */
+/* ============================================
+   RESPONSIVO
+   ============================================ */
 @media (max-width: 768px) {
     .container {
         padding: 0 1rem;
         margin: 1rem auto;
     }
 
+    .header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
     h1 {
         font-size: 1.5rem;
     }
 
-    .dashboard {
-        grid-template-columns: 1fr;
+    .splash-title {
+        font-size: 1.3rem;
+    }
+
+    .dashboard-grid {
+        grid-template-columns: repeat(2, 1fr);
     }
 
     .form-grid, .filter-section {
@@ -888,4 +890,209 @@ tbody tr:nth-child(even).row-fechada {
         font-size: 0.8rem;
         padding: 10px 15px;
     }
+
+    button {
+        padding: 10px 16px;
+        font-size: 0.9rem;
+    }
+
+    .modal-actions {
+        flex-direction: column-reverse;
+    }
+
+    .modal-actions button {
+        width: 100%;
+    }
+
+    .actions-cell {
+        min-width: auto;
+    }
+
+    .month-navigation {
+        gap: 1rem;
+    }
+
+    .month-display {
+        font-size: 1.1rem;
+        min-width: 150px;
+    }
+
+    .month-nav-btn {
+        padding: 6px 12px;
+        font-size: 0.85rem;
+    }
 }
+
+/* ============================================
+   RESPONSIVO PARA TABLETS
+   ============================================ */
+@media (max-width: 1400px) {
+    table {
+        font-size: 0.8rem;
+    }
+    
+    th {
+        font-size: 0.7rem;
+        padding: 10px 6px;
+    }
+    
+    td {
+        font-size: 0.8rem;
+        padding: 8px 6px;
+    }
+}
+
+@media (max-width: 1200px) {
+    table {
+        font-size: 0.75rem;
+    }
+    
+    th {
+        font-size: 0.65rem;
+        padding: 8px 4px;
+    }
+    
+    td {
+        font-size: 0.75rem;
+        padding: 6px 4px;
+    }
+}
+
+/* ============================================
+   UTILITÁRIOS ADICIONAIS
+   ============================================ */
+.text-center {
+    text-align: center;
+}
+
+.text-right {
+    text-align: right;
+}
+
+.mb-0 { margin-bottom: 0; }
+.mb-1 { margin-bottom: 0.5rem; }
+.mb-2 { margin-bottom: 1rem; }
+.mb-3 { margin-bottom: 1.5rem; }
+
+.mt-0 { margin-top: 0; }
+.mt-1 { margin-top: 0.5rem; }
+.mt-2 { margin-top: 1rem; }
+.mt-3 { margin-top: 1.5rem; }
+
+/* ============================================
+   SCROLLBAR CUSTOMIZADA
+   ============================================ */
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg-card);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--primary);
+    border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-light);
+}
+
+/* ============================================
+   ANIMAÇÕES EXTRAS
+   ============================================ */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fade-in-up {
+    animation: fadeInUp 0.4s ease;
+}
+
+/* ============================================
+   ESTADOS DE LOADING
+   ============================================ */
+.loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.spinner {
+    border: 3px solid var(--border-color);
+    border-top: 3px solid var(--primary);
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    animation: spin 1s linear infinite;
+    margin: 0 auto;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* ============================================
+   PRINT STYLES
+   ============================================ */
+@media print {
+    body {
+        background: white;
+        color: black;
+    }
+    
+    .header,
+    .button-wrapper,
+    .filter-section,
+    .connection-status,
+    .modal-overlay,
+    button {
+        display: none !important;
+    }
+    
+    .card {
+        border: 1px solid #ddd;
+        box-shadow: none;
+    }
+    
+    table {
+        border: 1px solid #000;
+    }
+    
+    th, td {
+        border: 1px solid #000;
+        color: #000;
+    }
+}
+
+/* ============================================
+   ACESSIBILIDADE
+   ============================================ */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* Focus visible para acessibilidade */
+*:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+}
+
+/* ============================================
+   FIM DO ARQUIVO
+   ============================================ */
