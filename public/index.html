@@ -6,348 +6,141 @@
     <title>Ordem de Compra</title>
     <link rel="icon" type="image/png" href="I.R.-COMERCIO-E-MATERIAIS-ELETRICOS-PRETO.png">
     <link rel="stylesheet" href="styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
+    <!-- Splash Screen -->
     <div class="splash-screen" id="splashScreen">
-    <h1 class="splash-title">Ordens de Compra</h1>
-</div>
+        <h1 class="splash-title">Ordem de Compra</h1>
+    </div>
+
+    <!-- Conteúdo Principal -->
     <div class="app-content">
-    <div class="container">
-        <!-- Header -->
-        <div class="header">
-    <h1>Ordens de Compra</h1>
-    <div id="connectionStatus" class="connection-status offline">
-        <span class="status-dot"></span>
-    </div>
-</div>
-
-        <!-- Dashboard -->
-        <div class="dashboard-grid">
-    <div class="stat-card">
-        <div class="stat-label">Ordens Fechadas</div>
-        <div class="stat-value stat-success" id="totalFechadas">0</div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-label">Ordens Abertas</div>
-        <div class="stat-value stat-danger" id="totalAbertas">0</div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-label">Total de Ordens</div>
-        <div class="stat-value" id="totalOrdens">1249</div>
-    </div>
-</div>
-
-        <div class="card">
-    <div class="month-navigation">
-        <button onclick="changeMonth(-1)" class="month-nav-btn">Anterior</button>
-        <h3 id="currentMonth" class="month-display">Carregando...</h3>
-        <button onclick="changeMonth(1)" class="month-nav-btn">Próximo</button>
-    </div>
-</div>
-
-        <div class="card">
-    <div class="button-wrapper">
-        <button class="register" onclick="openFormModal()">
-            + Nova Ordem de Compra
-        </button>
-    </div>
-</div>
-        
-        <div class="card">
-    <div class="month-navigation">
-
-            <!-- Filters -->
-            <div class="filter-section">
-                <div class="form-group">
-                    <label for="search">Pesquisar</label>
-                    <input type="text" id="search" placeholder="Digite nÂº ordem, fornecedor..." oninput="filterOrdens()">
-                </div>
-
-                <div class="form-group">
-                    <label for="filterResponsavel">Filtrar por ResponsÃ¡vel</label>
-                    <select id="filterResponsavel" onchange="filterOrdens()">
-                        <option value="">Todos</option>
-                        <option value="Miguel">Miguel</option>
-                        <option value="Isaque">Isaque</option>
-                        <option value="Roberto">Roberto</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label for="filterStatus">Filtrar por Status</label>
-                    <select id="filterStatus" onchange="filterOrdens()">
-                        <option value="">Todos</option>
-                        <option value="aberta">Aberta</option>
-                        <option value="fechada">Fechada</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label>&nbsp;</label>
-                    <button class="secondary" onclick="clearFilters();" style="width: 100%; margin: 0;">
-                        Limpar Filtros
-                    </button>
+        <div class="container">
+            <div class="header">
+                <h1>Ordem de Compra</h1>
+                <div id="connectionStatus" class="connection-status offline">
+                    <span class="status-dot"></span>
                 </div>
             </div>
-        </div>
 
-        <!-- Table -->
-        <div class="card">
-            <h2>Ordens Registradas</h2>
-            <div class="table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th style="width: 80px;">Fechada</th>
-                            <th>Nº Ordem</th>
-                            <th>Responsável</th>
-                            <th>Fornecedor</th>
-                            <th>Data</th>
-                            <th>Valor Total</th>
-                            <th>Status</th>
-                            <th>Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody id="ordensContainer">
-                        <tr>
-                            <td colspan="8" style="text-align: center; padding: 2rem;">
-                                Nenhuma ordem encontrada
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+            <div class="button-wrapper">
+                <button onclick="openFormModal()" class="register">Registrar Ordem</button>
+            </div>
+
+            <!-- NAVEGAÇÃO POR MESES -->
+            <div class="card">
+                <div class="month-navigation">
+                    <button onclick="changeMonth(-1)" class="month-nav-btn">Anterior</button>
+                    <h3 id="currentMonth" class="month-display">Carregando...</h3>
+                    <button onclick="changeMonth(1)" class="month-nav-btn">Próximo</button>
+                </div>
+            </div>
+
+            <!-- Dashboard -->
+            <div class="dashboard-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Total de Ordens</div>
+                    <div class="stat-value" id="totalOrdens">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Ordens Fechadas</div>
+                    <div class="stat-value stat-success" id="totalFechadas">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Ordens Abertas</div>
+                    <div class="stat-value stat-danger" id="totalAbertas">0</div>
+                </div>
+            </div>
+
+            <!-- FILTROS -->
+            <div class="card">
+                <div class="filter-section">
+                    <div class="form-group">
+                        <label for="search">Pesquisar</label>
+                        <input type="text" id="search" placeholder="Número, fornecedor, responsável..." oninput="filterOrdens()">
+                    </div>
+                    <div class="form-group">
+                        <label for="filterResponsavel">Responsável</label>
+                        <select id="filterResponsavel" onchange="filterOrdens()">
+                            <option value="">Todos</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="filterStatus">Status</label>
+                        <select id="filterStatus" onchange="filterOrdens()">
+                            <option value="">Todos</option>
+                            <option value="aberta">Aberta</option>
+                            <option value="fechada">Fechada</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <button onclick="clearFilters()" class="secondary" style="margin-top: 1.8rem;">Limpar Filtros</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- LISTA DE ORDENS -->
+            <div class="card">
+                <div style="overflow-x: auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width: 40px; text-align: center;">
+                                    <span style="font-size: 1.1rem;">✓</span>
+                                </th>
+                                <th>Nº Ordem</th>
+                                <th>Responsável</th>
+                                <th>Fornecedor</th>
+                                <th>Data</th>
+                                <th>Valor Total</th>
+                                <th>Status</th>
+                                <th style="text-align: center;">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ordensContainer"></tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Form Modal -->
-    <div id="formModal" class="modal-overlay">
+    <!-- MODAL DE VISUALIZAÇÃO -->
+    <div class="modal-overlay" id="infoModal">
         <div class="modal-content">
-           <div class="modal-header">
-    <h3 class="modal-title" id="formTitle">Nova Ordem de Compra</h3>
-</div>
+            <div class="modal-header">
+                <h3 class="modal-title">Ordem Nº <span id="modalNumero"></span></h3>
+            </div>
             
-            <form id="ordemForm" onsubmit="handleSubmit(event)">
-                <input type="hidden" id="editId">
-                <input type="hidden" id="numeroOrdem">
-
-                <!-- Tabs Navigation -->
-                <div class="tabs-container">
-                    <div class="tabs-nav">
-                        <button type="button" class="tab-btn active" onclick="switchTab('tab-geral')">
-                            Geral
-                        </button>
-                        <button type="button" class="tab-btn" onclick="switchTab('tab-fornecedor')">
-                            Fornecedor
-                        </button>
-                        <button type="button" class="tab-btn" onclick="switchTab('tab-pedido')">
-                            Pedido
-                        </button>
-                        <button type="button" class="tab-btn" onclick="switchTab('tab-entrega')">
-                            Entrega
-                        </button>
-                        <button type="button" class="tab-btn" onclick="switchTab('tab-pagamento')">
-                            Pagamento
-                        </button>
-                    </div>
-
-                    <!-- Tab: Geral -->
-                    <div id="tab-geral" class="tab-content active">
-                        <div class="form-grid">
-                            <div class="form-group">
-                                <label for="responsavel">ResponsÃ¡vel pelo Pedido *</label>
-                                <select id="responsavel" required>
-                                    <option value="">Selecione...</option>
-                                    <option value="Miguel">Miguel</option>
-                                    <option value="Isaque">Isaque</option>
-                                    <option value="Roberto">Roberto</option>
-                                </select>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="dataOrdem">Data da Ordem *</label>
-                                <input type="date" id="dataOrdem" required>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Tab: Fornecedor -->
-                    <div id="tab-fornecedor" class="tab-content">
-                        <div class="form-grid">
-                            <div class="form-group">
-                                <label for="razaoSocial">RazÃ£o Social *</label>
-                                <input type="text" id="razaoSocial" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="nomeFantasia">Nome Fantasia</label>
-                                <input type="text" id="nomeFantasia">
-                            </div>
-                            <div class="form-group">
-                                <label for="cnpj">CNPJ *</label>
-                                <input type="text" id="cnpj" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="enderecoFornecedor">EndereÃ§o</label>
-                                <input type="text" id="enderecoFornecedor">
-                            </div>
-                            <div class="form-group">
-                                <label for="site">Site</label>
-                                <input type="text" id="site">
-                            </div>
-                            <div class="form-group">
-                                <label for="contato">Contato</label>
-                                <input type="text" id="contato">
-                            </div>
-                            <div class="form-group">
-                                <label for="telefone">Telefone</label>
-                                <input type="text" id="telefone">
-                            </div>
-                            <div class="form-group">
-                                <label for="email">E-mail</label>
-                                <input type="email" id="email">
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Tab: Pedido -->
-                    <div id="tab-pedido" class="tab-content">
-                        <div style="overflow-x: auto;">
-                            <table class="items-table" id="itemsTable">
-                                <thead>
-                                    <tr>
-                                        <th style="width: 50px;">Item</th>
-                                        <th style="width: 250px;">EspecificaÃ§Ã£o</th>
-                                        <th style="width: 80px;">QTD</th>
-                                        <th style="width: 80px;">UNID</th>
-                                        <th style="width: 120px;">Valor UN (R$)</th>
-                                        <th style="width: 120px;">Valor Total</th>
-                                        <th style="width: 80px;">AÃ§Ãµes</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="itemsBody">
-                                </tbody>
-                            </table>
-                        </div>
-                        <button type="button" onclick="addItem()" class="success small">Adicionar Item</button>
-
-                        <div class="form-grid" style="margin-top: 1.5rem;">
-                            <div class="form-group">
-                                <label>Valor Total da Ordem</label>
-                                <input type="text" id="valorTotalOrdem" readonly style="font-weight: bold; font-size: 1.1rem;">
-                            </div>
-                            <div class="form-group">
-                                <label for="ipi">IPI</label>
-                                <input type="text" id="ipi" placeholder="Ex: Isento">
-                            </div>
-                            <div class="form-group">
-                                <label for="st">ST</label>
-                                <input type="text" id="st" placeholder="Ex: NÃ£o incluÃ­do">
-                            </div>
-                            <div class="form-group">
-                                <label for="frete">Frete</label>
-                                <select id="frete" required>
-                                    <option value="">Selecione...</option>
-                                    <option value="CIF">CIF</option>
-                                    <option value="FOB">FOB</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Tab: Entrega -->
-                    <div id="tab-entrega" class="tab-content">
-                        <div class="form-grid">
-                            <div class="form-group" style="grid-column: 1 / -1;">
-                                <label for="localEntrega">Local de Entrega *</label>
-                                <textarea id="localEntrega" required></textarea>
-                            </div>
-                            <div class="form-group">
-                                <label for="prazoEntrega">Prazo de Entrega *</label>
-                                <input type="text" id="prazoEntrega" required placeholder="Ex: 15 dias Ãºteis">
-                            </div>
-                            <div class="form-group">
-                                <label for="transporte">Transporte *</label>
-                                <select id="transporte" required>
-                                    <option value="">Selecione...</option>
-                                    <option value="CIF">CIF</option>
-                                    <option value="FOB">FOB</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Tab: Pagamento -->
-                    <div id="tab-pagamento" class="tab-content">
-                        <div class="form-grid">
-                            <div class="form-group">
-                                <label for="formaPagamento">Forma de Pagamento *</label>
-                                <input type="text" id="formaPagamento" required placeholder="Ex: TransferÃªncia bancÃ¡ria">
-                            </div>
-                            <div class="form-group">
-                                <label for="prazoPagamento">Prazo de Pagamento *</label>
-                                <input type="text" id="prazoPagamento" required placeholder="Ex: 30 dias">
-                            </div>
-                            <div class="form-group" style="grid-column: 1 / -1;">
-                                <label for="dadosBancarios">Dados BancÃ¡rios</label>
-                                <textarea id="dadosBancarios" placeholder="Banco, AgÃªncia, Conta..."></textarea>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-<div class="modal-actions" id="formActions">
-    <button type="button" class="secondary" onclick="closeFormModal()">
-        Cancelar
-    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Info Modal -->
-    <div id="infoModal" class="modal-overlay">
-        <div class="modal-content">
-           <div class="modal-header">
-    <h3 class="modal-title">Ordem de Compra Nº <span id="modalNumero"></span></h3>
-</div>
-            
-            <!-- Tabs for Info Modal -->
             <div class="tabs-container">
                 <div class="tabs-nav">
-                    <button type="button" class="tab-btn active" onclick="switchInfoTab('info-tab-geral')">
-                        Geral
-                    </button>
-                    <button type="button" class="tab-btn" onclick="switchInfoTab('info-tab-fornecedor')">
-                        Fornecedor
-                    </button>
-                    <button type="button" class="tab-btn" onclick="switchInfoTab('info-tab-pedido')">
-                        Pedido
-                    </button>
-                    <button type="button" class="tab-btn" onclick="switchInfoTab('info-tab-entrega')">
-                        Entrega
-                    </button>
-                    <button type="button" class="tab-btn" onclick="switchInfoTab('info-tab-pagamento')">
-                        Pagamento
-                    </button>
+                    <button class="tab-btn active" onclick="switchInfoTab('info-tab-geral')">Geral</button>
+                    <button class="tab-btn" onclick="switchInfoTab('info-tab-fornecedor')">Fornecedor</button>
+                    <button class="tab-btn" onclick="switchInfoTab('info-tab-pedido')">Pedido</button>
+                    <button class="tab-btn" onclick="switchInfoTab('info-tab-entrega')">Entrega</button>
+                    <button class="tab-btn" onclick="switchInfoTab('info-tab-pagamento')">Pagamento</button>
                 </div>
 
-                <div id="info-tab-geral" class="tab-content active"></div>
-                <div id="info-tab-fornecedor" class="tab-content"></div>
-                <div id="info-tab-pedido" class="tab-content"></div>
-                <div id="info-tab-entrega" class="tab-content"></div>
-                <div id="info-tab-pagamento" class="tab-content"></div>
+                <div class="tab-content active" id="info-tab-geral"></div>
+                <div class="tab-content" id="info-tab-fornecedor"></div>
+                <div class="tab-content" id="info-tab-pedido"></div>
+                <div class="tab-content" id="info-tab-entrega"></div>
+                <div class="tab-content" id="info-tab-pagamento"></div>
             </div>
 
             <div class="modal-actions">
-                <button class="secondary" onclick="closeInfoModal()">Fechar</button>
-                <button class="success" onclick="generatePDF()">
-                    Gerar PDF
-                </button>
+                <button onclick="generatePDF()" class="success">Gerar PDF</button>
+                <button onclick="closeInfoModal()" class="secondary">Fechar</button>
             </div>
         </div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script>
+        setTimeout(() => {
+            const splash = document.getElementById('splashScreen');
+            if (splash) splash.style.display = 'none';
+        }, 3000);
+    </script>
     <script src="script.js"></script>
 </body>
 </html>
