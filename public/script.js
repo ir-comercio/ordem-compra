@@ -161,18 +161,18 @@ function switchInfoTab(tabId) {
 }
 
 // ============================================
-// MODAL DE FORMULÁRIO - CORRIGIDO
+// MODAL DE FORMULÁRIO
 // ============================================
 function openFormModal() {
     editingId = null;
     currentTab = 0;
-    itemCounter = 0; // ✅ CORRIGIDO
+    itemCounter = 0;
     
     const nextNumber = getNextOrderNumber();
     const today = new Date().toISOString().split('T')[0];
     
     const modalHTML = `
-        <div class="modal-overlay" id="formModal">
+        <div class="modal-overlay" id="formModal" style="display: flex;">
             <div class="modal-content" style="max-width: 1200px;">
                 <div class="modal-header">
                     <h3 class="modal-title">Nova Ordem de Compra</h3>
@@ -282,7 +282,7 @@ function openFormModal() {
                             <div class="form-grid">
                                 <div class="form-group">
                                     <label for="localEntrega">Local de Entrega</label>
-                                    <input type="text" id="localEntrega" placeholder="Rua Tadorna nº 472, sala 2, Novo Horizonte - Serra/ES  |  CEP: 29.163-318">
+                                    <input type="text" id="localEntrega" value="Rua Tadorna nº 472, sala 2, Novo Horizonte - Serra/ES  |  CEP: 29.163-318">
                                 </div>
                                 <div class="form-group">
                                     <label for="prazoEntrega">Prazo de Entrega</label>
@@ -326,7 +326,7 @@ function openFormModal() {
 
     document.body.insertAdjacentHTML('beforeend', modalHTML);
     addItem();
-    updateNavigationButtons(); // ✅ CORRIGIDO
+    updateNavigationButtons();
     setTimeout(() => document.getElementById('numeroOrdem')?.focus(), 100);
 }
 
@@ -344,6 +344,7 @@ function closeFormModal(showCancelMessage = false) {
         setTimeout(() => modal.remove(), 200);
     }
 }
+
 // ============================================
 // GESTÃO DE ITENS
 // ============================================
@@ -483,7 +484,7 @@ function handleSubmit(event) {
 }
 
 // ============================================
-// EDIÇÃO - CORRIGIDO
+// EDIÇÃO
 // ============================================
 function editOrdem(id) {
     const ordem = ordens.find(o => o.id === id);
@@ -494,10 +495,10 @@ function editOrdem(id) {
     
     editingId = id;
     currentTab = 0;
-    itemCounter = 0; // ✅ CORRIGIDO
+    itemCounter = 0;
     
     const modalHTML = `
-        <div class="modal-overlay" id="formModal">
+        <div class="modal-overlay" id="formModal" style="display: flex;">
             <div class="modal-content" style="max-width: 1200px;">
                 <div class="modal-header">
                     <h3 class="modal-title">Editar Ordem de Compra</h3>
@@ -607,7 +608,7 @@ function editOrdem(id) {
                             <div class="form-grid">
                                 <div class="form-group">
                                     <label for="localEntrega">Local de Entrega</label>
-                                    <input type="text" id="localEntrega" value="${ordem.localEntrega || ''}" placeholder="Rua Tadorna nº 472, sala 2, Novo Horizonte - Serra/ES  |  CEP: 29.163-318">
+                                    <input type="text" id="localEntrega" value="${ordem.localEntrega || 'Rua Tadorna nº 472, sala 2, Novo Horizonte - Serra/ES  |  CEP: 29.163-318'}">
                                 </div>
                                 <div class="form-group">
                                     <label for="prazoEntrega">Prazo de Entrega</label>
@@ -651,7 +652,6 @@ function editOrdem(id) {
 
     document.body.insertAdjacentHTML('beforeend', modalHTML);
     
-    // ✅ CORRIGIDO - Carregar itens existentes
     if (ordem.items && ordem.items.length > 0) {
         ordem.items.forEach(item => {
             addItem();
@@ -670,7 +670,7 @@ function editOrdem(id) {
         addItem();
     }
     
-    updateNavigationButtons(); // ✅ CORRIGIDO
+    updateNavigationButtons();
 }
 
 // ============================================
@@ -696,7 +696,7 @@ async function deleteOrdem(id) {
 }
 
 function showConfirm(message, options = {}) {
-    return new Promise((resolve) => {
+    returnnew Promise((resolve) => {
         const { title = 'Confirmação', confirmText = 'Confirmar', cancelText = 'Cancelar', type = 'warning' } = options;
 
         const modalHTML = `
@@ -744,6 +744,7 @@ function toggleStatus(id) {
         showToast(`Ordem marcada como ${ordem.status}!`, 'success');
     }
 }
+
 // ============================================
 // VISUALIZAÇÃO
 // ============================================
@@ -872,7 +873,7 @@ function updateDisplay() {
 }
 
 // ============================================
-// DASHBOARD COM ALERTA - CORRIGIDO
+// DASHBOARD COM ALERTA
 // ============================================
 function updateDashboard() {
     const monthOrdens = getOrdensForCurrentMonth();
@@ -883,7 +884,6 @@ function updateDashboard() {
     document.getElementById('totalFechadas').textContent = totalFechadas;
     document.getElementById('totalAbertas').textContent = totalAbertas;
     
-    // ✅ ALERTA VISUAL - Ordens Abertas
     const cardAbertas = document.getElementById('cardAbertas');
     if (!cardAbertas) return;
     
@@ -1048,28 +1048,6 @@ function showToast(message, type = 'success') {
 }
 
 // ============================================
-// GERAÇÃO DE PDF - PARTE 1
-// ============================================
-function generatePDFFromTable(id) {
-    const ordem = ordens.find(o => o.id === id);
-    if (!ordem) {
-        showToast('Ordem não encontrada!', 'error');
-        return;
-    }
-    generatePDFForOrdem(ordem);
-}
-
-function generatePDF() {
-    const modalNumero = document.getElementById('modalNumero').textContent;
-    const ordem = ordens.find(o => o.numeroOrdem === modalNumero);
-    
-    if (!ordem) {
-        showToast('Ordem não encontrada!', 'error');
-        return;
-    }
-    generatePDFForOrdem(ordem);
-}
-// ============================================
 // GERAÇÃO DE PDF COMPLETA - CORRIGIDO
 // ============================================
 function generatePDFFromTable(id) {
@@ -1096,12 +1074,12 @@ function generatePDFForOrdem(ordem) {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
     
-    let y = 20;
+    let y = 15;
     const margin = 15;
     const pageWidth = doc.internal.pageSize.width;
     const lineHeight = 5;
     
-    // ✅ LOGO NO CANTO SUPERIOR ESQUERDO - CORRIGIDO
+    // LOGO NO CANTO SUPERIOR ESQUERDO
     const logo = new Image();
     logo.crossOrigin = 'anonymous';
     logo.src = 'I.R.-COMERCIO-E-MATERIAIS-ELETRICOS-LTDA.png';
@@ -1110,13 +1088,13 @@ function generatePDFForOrdem(ordem) {
         try {
             const imgWidth = 50;
             const imgHeight = (logo.height / logo.width) * imgWidth;
-            doc.addImage(logo, 'PNG', margin, 20, imgWidth, imgHeight);
+            doc.addImage(logo, 'PNG', margin, 15, imgWidth, imgHeight);
         } catch (e) {
             console.log('Erro ao adicionar logo:', e);
         }
     };
     
-    y = 40;
+    y = 35;
     
     // CABEÇALHO
     doc.setFontSize(18);
@@ -1389,160 +1367,4 @@ function generatePDFForOrdem(ordem) {
         xPos += colWidths.st;
         doc.line(xPos, y, xPos, y + necessaryHeight);
         
-        doc.text(item.valorTotal, xPos + (colWidths.total / 2), y + (necessaryHeight / 2) + 1.5, { align: 'center' });
-        xPos += colWidths.total;
-        doc.line(xPos, y, xPos, y + necessaryHeight);
-        
-        doc.line(margin, y + necessaryHeight, margin + tableWidth, y + necessaryHeight);
-        
-        y += necessaryHeight;
-    });
-    
-    y += 8;
-    
-    // VALOR TOTAL E FRETE
-    if (y > doc.internal.pageSize.height - 80) {
-        doc.addPage();
-        y = 20;
-    }
-    doc.setFontSize(11);
-    doc.setFont(undefined, 'bold');
-    doc.text(`VALOR TOTAL: ${ordem.valorTotal}`, margin, y);
-    
-    y += 10;
-    
-    // ✅ LOCAL DE ENTREGA - EDITÁVEL
-    if (y > doc.internal.pageSize.height - 70) {
-        doc.addPage();
-        y = 20;
-    }
-    doc.setFontSize(11);
-    doc.setFont(undefined, 'bold');
-    doc.text('LOCAL DE ENTREGA:', margin, y);
-    y += 5;
-    doc.setFontSize(11);
-    doc.setFont(undefined, 'normal');
-    
-    const localPadrao = 'Rua Tadorna nº 472, sala 2, Novo Horizonte - Serra/ES  |  CEP: 29.163-318';
-    const localEntregaPDF = ordem.localEntrega && ordem.localEntrega.trim() !== '' 
-        ? ordem.localEntrega 
-        : localPadrao;
-    
-    doc.text(localEntregaPDF, margin, y);
-    
-    y += 10;
-    
-    // PRAZO E FRETE
-    if (y > doc.internal.pageSize.height - 60) {
-        doc.addPage();
-        y = 20;
-    }
-    doc.setFontSize(11);
-    doc.setFont(undefined, 'bold');
-    doc.text('PRAZO DE ENTREGA:', margin, y);
-    doc.setFont(undefined, 'normal');
-    doc.setFontSize(11);
-    doc.text(ordem.prazoEntrega || '-', margin + 42, y);
-    
-    doc.setFont(undefined, 'bold');
-    doc.setFontSize(11);
-    doc.text('FRETE:', pageWidth - margin - 35, y);
-    doc.setFont(undefined, 'normal');
-    doc.setFontSize(11);
-    doc.text(ordem.frete || '-', pageWidth - margin - 20, y);
-    
-    y += 10;
-
-    // CONDIÇÕES DE PAGAMENTO E ENTREGA
-    if (y > doc.internal.pageSize.height - 50) {
-        doc.addPage();
-        y = 20;
-    }
-    doc.setFontSize(11);
-    doc.setFont(undefined, 'bold');
-    doc.text('CONDIÇÕES DE PAGAMENTO:', margin, y);
-    y += 5;
-    doc.setFont(undefined, 'normal');
-    doc.text(`Forma: ${ordem.formaPagamento}`, margin, y);
-    y += 5;
-    doc.text(`Prazo: ${ordem.prazoPagamento}`, margin, y);
-    
-    if (ordem.dadosBancarios) {
-        y += 5;
-        doc.setFont(undefined, 'bold');
-        doc.text('Dados Bancários:', margin, y);
-        y += 5;
-        doc.setFont(undefined, 'normal');
-        const bancarioLines = doc.splitTextToSize(ordem.dadosBancarios, pageWidth - (2 * margin));
-        doc.text(bancarioLines, margin, y);
-        y += (bancarioLines.length * 5);
-    }
-    
-    y += 10;
-    
-    // ✅ AVISO FINAL - ANTES DAS ASSINATURAS
-    const avisoY = doc.internal.pageSize.height - 70;
-    
-    if (y > avisoY - 30) {
-        doc.addPage();
-        y = 20;
-    }
-    
-    // Caixa de aviso
-    doc.setFillColor(240, 240, 240);
-    doc.rect(margin, avisoY - 25, pageWidth - (2 * margin), 20, 'F');
-    doc.setDrawColor(200, 200, 200);
-    doc.rect(margin, avisoY - 25, pageWidth - (2 * margin), 20, 'S');
-    
-    doc.setFontSize(10);
-    doc.setFont(undefined, 'bold');
-    doc.setTextColor(0, 0, 0);
-    doc.text('ATENÇÃO SR. FORNECEDOR:', margin + 5, avisoY - 18);
-    
-    doc.setFont(undefined, 'normal');
-    doc.setFontSize(9);
-    doc.text('1) GENTILEZA MENCIONAR NA NOTA FISCAL O Nº 907/08/2024', margin + 5, avisoY - 12);
-    doc.text('2) FAVOR ENVIAR A NOTA FISCAL ELETRÔNICA (ARQUIVO .XML) PARA: FINANCEIRO.IRCOMERCIO@GMAIL.COM', margin + 5, avisoY - 6);
-    
-    // ✅ ASSINATURAS - CORRIGIDAS
-    const assinaturaY = doc.internal.pageSize.height - 40;
-    const col1X = margin;
-    const col2X = pageWidth / 2 + 10;
-    
-    // Adicionar imagem da assinatura
-    const assinatura = new Image();
-    assinatura.crossOrigin = 'anonymous';
-    assinatura.src = 'assinatura.png'; // ✅ Nome correto
-    
-    assinatura.onload = function() {
-        try {
-            const imgWidth = 70;
-            const imgHeight = (assinatura.height / assinatura.width) * imgWidth;
-            doc.addImage(assinatura, 'PNG', col1X, assinaturaY - imgHeight - 10, imgWidth, imgHeight);
-        } catch (e) {
-            console.log('Erro ao adicionar assinatura:', e);
-        }
-    };
-    
-    doc.setFontSize(10);
-    doc.setFont(undefined, 'normal');
-    doc.setTextColor(0, 0, 0);
-    
-    // Linha de assinatura 1 (Comprador)
-    doc.line(col1X, assinaturaY, col1X + 80, assinaturaY);
-    doc.setFont(undefined, 'bold');
-    doc.text('Rosemeire Bicalho de L. Gravino', col1X + 2, assinaturaY + 5);
-    doc.setFontSize(8);
-    doc.setFont(undefined, 'normal');
-    doc.text('MG-10.078.568 / CPF: 045.160.616-78', col1X + 2, assinaturaY + 10);
-    doc.text('Diretora', col1X + 2, assinaturaY + 14);
-    
-    // Linha de assinatura 2 (Fornecedor)
-    doc.setFontSize(10);
-    doc.line(col2X, assinaturaY, col2X + 80, assinaturaY);
-    doc.text('Fornecedor', col2X + 25, assinaturaY + 6);
-    
-    // Salvar PDF
-    doc.save(`Ordem_Compra_${ordem.numeroOrdem}.pdf`);
-    showToast('PDF gerado com sucesso!', 'success');
-}
+        doc.text(item.valorTotal, xPos + (colWidths.total / 2), y + (necessaryHeight / 2) + 1.5
