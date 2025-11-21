@@ -27,6 +27,7 @@
     --btn-edit: #777777;
     --btn-view: #fa7000;
     --btn-save: #00cc77;
+    --alert-color: #ef4444;
 }
 
 /* ============================================
@@ -65,6 +66,51 @@ body {
     line-height: 1.6;
     transition: background-color 0.3s ease, color 0.3s ease;
     overflow-y: scroll;
+}
+
+/* ============================================
+   ALERTA VISUAL - ORDENS ABERTAS
+   ============================================ */
+.stat-card.has-alert {
+    position: relative;
+    animation: pulseAlert 2s ease-in-out infinite;
+    border-color: var(--alert-color) !important;
+}
+
+@keyframes pulseAlert {
+    0%, 100% {
+        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+    }
+    50% {
+        box-shadow: 0 0 20px 5px rgba(239, 68, 68, 0.2);
+    }
+}
+
+.pulse-badge {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: var(--alert-color);
+    color: white;
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 700;
+    animation: pulse 2s ease-in-out infinite;
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1);
+    }
 }
 
 /* ============================================
@@ -210,6 +256,7 @@ h2 {
     border-radius: 10px;
     border: 1px solid var(--border-color);
     transition: all 0.2s ease;
+    position: relative;
 }
 
 .stat-card:hover {
@@ -254,7 +301,7 @@ button {
     font-size: 0.95rem;
     font-weight: 600;
     margin-right: 12px;
-    transition: all 0.2s ease;
+    transition: background 0.2s ease;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -263,11 +310,6 @@ button {
 
 button:hover:not(:disabled) {
     opacity: 0.9;
-    transform: translateY(-1px);
-}
-
-button:active:not(:disabled) {
-    transform: translateY(0);
 }
 
 button:disabled {
@@ -301,7 +343,7 @@ button.success:hover:not(:disabled) {
 }
 
 button.small {
-    padding: 8px 14px;
+    padding: 8px 12px;
     font-size: 0.85rem;
 }
 
@@ -328,22 +370,13 @@ button.success, button.save, button[type="submit"], button[onclick*="generatePDF
 .action-btn {
     padding: 8px 12px;
     font-size: 0.85rem;
-    margin: 0 2px;
+    margin: 0 4px;
     min-width: 70px;
 }
 
 .actions-cell { 
     white-space: nowrap;
-    min-width: 320px;
-    padding: 10px 8px !important;
-    text-align: center;
-}
-
-.actions {
-    display: flex;
-    gap: 6px;
-    flex-wrap: wrap;
-    justify-content: center;
+    min-width: 260px;
 }
 
 .button-wrapper { 
@@ -455,7 +488,7 @@ input[readonly], select[disabled], textarea[readonly] {
 }
 
 /* ============================================
-   TABELAS
+   TABELAS - SEM SCROLL HORIZONTAL
    ============================================ */
 .table-container {
     overflow-x: auto;
@@ -468,6 +501,7 @@ table {
     border-radius: 8px;
     overflow: hidden;
     margin-top: 1rem;
+    table-layout: auto;
 }
 
 thead {
@@ -475,21 +509,23 @@ thead {
 }
 
 th {
-    padding: 16px 20px;
+    padding: 16px 12px;
     text-align: left;
     font-weight: 700;
     color: var(--th-color);
-    font-size: 0.85rem;
+    font-size: 0.75rem;
     text-transform: uppercase;
-    letter-spacing: 1px;
+    letter-spacing: 0.5px;
     border-bottom: 1px solid var(--th-border);
+    white-space: nowrap;
 }
 
 td {
-    padding: 14px 20px;
+    padding: 12px;
     border-bottom: 1px solid var(--border-color);
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     color: var(--text-primary);
+    word-wrap: break-word;
 }
 
 tbody tr {
@@ -514,7 +550,7 @@ tbody tr.row-fechada:hover {
     background: rgba(34, 197, 94, 0.15) !important;
 }
 
-tbody tr.row-fechada:nth-child(even) {
+tbody tr:nth-child(even).row-fechada {
     background: rgba(34, 197, 94, 0.12) !important;
 }
 
@@ -614,7 +650,7 @@ tbody tr.row-fechada:nth-child(even) {
 
 .checkbox-label-styled:hover {
     border-color: var(--primary);
-    background: rgba(204, 112, 0, 0.1);
+    background: var(--primary);
 }
 
 .styled-checkbox:checked + .checkbox-label-styled {
@@ -630,7 +666,7 @@ tbody tr.row-fechada:nth-child(even) {
 }
 
 /* ============================================
-   MODAL
+   MODAL - TABELAS SEM SCROLL
    ============================================ */
 .modal-overlay {
     display: none;
@@ -668,6 +704,20 @@ tbody tr.row-fechada:nth-child(even) {
     border: 1px solid var(--border-color);
     transform: scale(0.9);
     animation: scaleIn 0.2s ease forwards;
+}
+
+/* Tabela no modal sem scroll horizontal */
+.modal-content table {
+    display: block;
+    overflow-x: visible;
+    white-space: normal;
+}
+
+.modal-content table th,
+.modal-content table td {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    max-width: 200px;
 }
 
 @keyframes scaleIn {
@@ -713,6 +763,7 @@ tbody tr.row-fechada:nth-child(even) {
     margin-top: 1.5rem;
     padding-top: 1.5rem;
     border-top: 2px solid var(--border-color);
+    flex-wrap: wrap;
 }
 
 .modal-actions button { 
@@ -737,20 +788,6 @@ tbody tr.row-fechada:nth-child(even) {
     flex-wrap: wrap;
 }
 
-.tabs-nav::-webkit-scrollbar {
-    height: 6px;
-}
-
-.tabs-nav::-webkit-scrollbar-track {
-    background: var(--input-bg);
-    border-radius: 3px;
-}
-
-.tabs-nav::-webkit-scrollbar-thumb {
-    background: var(--primary);
-    border-radius: 3px;
-}
-
 .tab-btn {
     background: transparent;
     border: none;
@@ -769,7 +806,6 @@ tbody tr.row-fechada:nth-child(even) {
 .tab-btn:hover {
     color: var(--primary);
     background: transparent;
-    transform: none;
 }
 
 .tab-btn.active {
@@ -822,7 +858,12 @@ tbody tr.row-fechada:nth-child(even) {
 .item-actions {
     display: flex;
     gap: 0.5rem;
-    justify-content: center;
+}
+
+.actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
 }
 
 .hidden {
@@ -885,11 +926,11 @@ tbody tr.row-fechada:nth-child(even) {
     }
 
     table {
-        font-size: 0.85rem;
+        font-size: 0.8rem;
     }
 
     th, td {
-        padding: 10px 8px;
+        padding: 8px 6px;
     }
 
     .tabs-nav {
@@ -950,12 +991,6 @@ tbody tr.row-fechada:nth-child(even) {
         font-size: 0.8rem;
         padding: 8px 6px;
     }
-
-    .action-btn {
-        font-size: 0.8rem;
-        padding: 6px 10px;
-        min-width: 60px;
-    }
 }
 
 @media (max-width: 1200px) {
@@ -971,16 +1006,6 @@ tbody tr.row-fechada:nth-child(even) {
     td {
         font-size: 0.75rem;
         padding: 6px 4px;
-    }
-
-    .action-btn {
-        font-size: 0.75rem;
-        padding: 5px 8px;
-        min-width: 55px;
-    }
-
-    .actions-cell {
-        min-width: 280px;
     }
 }
 
@@ -1004,27 +1029,6 @@ tbody tr.row-fechada:nth-child(even) {
 .mt-1 { margin-top: 0.5rem; }
 .mt-2 { margin-top: 1rem; }
 .mt-3 { margin-top: 1.5rem; }
-
-/* ============================================
-   SCROLLBAR CUSTOMIZADA
-   ============================================ */
-::-webkit-scrollbar {
-    width: 10px;
-    height: 10px;
-}
-
-::-webkit-scrollbar-track {
-    background: var(--bg-card);
-}
-
-::-webkit-scrollbar-thumb {
-    background: var(--primary);
-    border-radius: 5px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-    background: var(--primary-light);
-}
 
 /* ============================================
    ANIMAÇÕES EXTRAS
@@ -1117,7 +1121,3 @@ tbody tr.row-fechada:nth-child(even) {
     outline: 2px solid var(--primary);
     outline-offset: 2px;
 }
-
-/* ============================================
-   FIM DO ARQUIVO
-   ============================================ */
