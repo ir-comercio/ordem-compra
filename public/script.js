@@ -1361,51 +1361,87 @@ function generatePDFForOrdem(ordem) {
     doc.text('2) FAVOR ENVIAR A NOTA FISCAL ELETRÔNICA (ARQUIVO .XML) PARA: FINANCEIRO.IRCOMERCIO@GMAIL.COM', margin + 5, avisoY - 6);
     
     // ============================================
-    // ASSINATURAS - COM IMAGEM E LAYOUT CORRETO
+// ASSINATURAS - EXATAMENTE COMO A IMAGEM
+// ============================================
+// Substitua APENAS esta seção no final da função generatePDFForOrdem
+
     // ============================================
-    const assinaturaY = doc.internal.pageSize.height - 40;
-    const col1X = margin;
-    const col2X = pageWidth / 2 + 10;
+    // AVISO AO FORNECEDOR
+    // ============================================
+    const avisoY = doc.internal.pageSize.height - 70;
     
-    // DATA
+    if (y > avisoY - 30) {
+        doc.addPage();
+    }
+    
+    doc.setDrawColor(0, 0, 0);
+    doc.setLineWidth(0.5);
+    doc.rect(margin, avisoY - 25, pageWidth - (2 * margin), 20, 'S');
+    
+    doc.setFontSize(10);
+    doc.setFont(undefined, 'bold');
+    doc.setTextColor(0, 0, 0);
+    doc.text('ATENÇÃO SR. FORNECEDOR:', pageWidth / 2, avisoY - 18, { align: 'center' });
+    
+    doc.setFont(undefined, 'normal');
+    doc.setFontSize(9);
+    doc.text(`1) GENTILEZA MENCIONAR NA NOTA FISCAL O Nº  ${ordem.numeroOrdem}`, margin + 5, avisoY - 12);
+    doc.text('2) FAVOR ENVIAR A NOTA FISCAL ELETRÔNICA (ARQUIVO .XML) PARA: FINANCEIRO.IRCOMERCIO@GMAIL.COM', margin + 5, avisoY - 6);
+    
+    // ============================================
+    // ASSINATURAS - EXATAMENTE COMO A IMAGEM
+    // ============================================
+    const assinaturaBaseY = doc.internal.pageSize.height - 45;
+    const col1X = margin + 20;
+    const col2X = pageWidth / 2 + 20;
+    
+    // ===== LADO ESQUERDO - DIRETORA =====
+    
+    // 1. DATA
     doc.setFontSize(10);
     doc.setFont(undefined, 'normal');
     doc.setTextColor(0, 0, 0);
     const dataAtual = new Date();
     const meses = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
     const dataTexto = `Serra/ES, ${dataAtual.getDate()} de ${meses[dataAtual.getMonth()]} de ${dataAtual.getFullYear()}.`;
-    doc.text(dataTexto, pageWidth / 2, assinaturaY - 35, { align: 'center' });
+    doc.text(dataTexto, col1X + 20, assinaturaBaseY - 30, { align: 'center' });
     
-    // IMAGEM DA ASSINATURA (manuscrita em roxo) - assinatura.png
+    // 2. IMAGEM DA ASSINATURA (manuscrita em roxo)
     const assinatura = new Image();
     assinatura.crossOrigin = 'anonymous';
     assinatura.src = 'assinatura.png';
     
     assinatura.onload = function() {
         try {
-            const imgWidth = 60;
+            const imgWidth = 50;
             const imgHeight = (assinatura.height / assinatura.width) * imgWidth;
-            // Posiciona a imagem ABAIXO da data e ACIMA da linha
-            doc.addImage(assinatura, 'PNG', col1X + 10, assinaturaY - imgHeight - 5, imgWidth, imgHeight);
+            // Posiciona abaixo da data
+            doc.addImage(assinatura, 'PNG', col1X - 5, assinaturaBaseY - 22, imgWidth, imgHeight);
         } catch (e) {
             console.log('Erro assinatura:', e);
         }
     };
     
-    // COMPRADOR (lado esquerdo)
-    doc.line(col1X, assinaturaY, col1X + 80, assinaturaY);
-    doc.setFont(undefined, 'bold');
-    doc.setFontSize(10);
-    doc.text('Rosemeire Bicalho de Lima Gravino', col1X + 40, assinaturaY + 5, { align: 'center' });
-    doc.setFont(undefined, 'normal');
-    doc.setFontSize(9);
-    doc.text('MG-10.078.568 / CPF: 045.160.616-78', col1X + 40, assinaturaY + 10, { align: 'center' });
-    doc.text('Diretora', col1X + 40, assinaturaY + 15, { align: 'center' });
+    // 3. LINHA HORIZONTAL
+    doc.setLineWidth(0.3);
+    doc.line(col1X - 10, assinaturaBaseY, col1X + 50, assinaturaBaseY);
     
-    // FORNECEDOR (lado direito)
+    // 4. NOME
     doc.setFontSize(10);
-    doc.line(col2X, assinaturaY, col2X + 80, assinaturaY);
-    doc.text('Fornecedor', col2X + 40, assinaturaY + 6, { align: 'center' });
+    doc.setFont(undefined, 'bold');
+    doc.text('Rosemeire Bicalho de Lima Gravino', col1X + 20, assinaturaBaseY + 5, { align: 'center' });
+    
+    // 5. DOCUMENTOS
+    doc.setFontSize(9);
+    doc.setFont(undefined, 'normal');
+    doc.text('MG-10.078.568 / CPF: 045.160.616-78', col1X + 20, assinaturaBaseY + 10, { align: 'center' });
+    
+    // 6. CARGO
+    doc.text('Diretora', col1X + 20, assinaturaBaseY + 15, { align: 'center' });
+    
+    // ===== LADO DIREITO - FORNECEDOR (SÓ LINHA EM BRANCO) =====
+    doc.setLineWidth(0.3);
+    doc.line(col2X - 10, assinaturaBaseY, col2X + 50, assinaturaBaseY);
     
     // ============================================
     // SALVAR PDF COM NOME CORRETO
