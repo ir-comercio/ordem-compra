@@ -1367,4 +1367,180 @@ function generatePDFForOrdem(ordem) {
         xPos += colWidths.st;
         doc.line(xPos, y, xPos, y + necessaryHeight);
         
-        doc.text(item.valorTotal, xPos + (colWidths.total / 2), y + (necessaryHeight / 2) + 1.5
+        doc.text(item.valorTotal, xPos + (colWidths.total / 2), y + (necessaryHeight / 2) + 1.5, { align: 'center' });
+        xPos += colWidths.total;
+        doc.line(xPos, y, xPos, y + necessaryHeight);
+        
+        doc.line(margin, y + necessaryHeight, margin + tableWidth, y + necessaryHeight);
+        
+        y += necessaryHeight;
+    });
+    
+    y += 8;
+    
+    // VALOR TOTAL E FRETE
+    if (y > doc.internal.pageSize.height - 80) {
+        doc.addPage();
+        y = 20;
+    }
+    doc.setFontSize(11);
+    doc.setFont(undefined, 'bold');
+    doc.text(`VALOR TOTAL: ${ordem.valorTotal}`, margin, y);
+    
+    y += 10;
+    
+    // LOCAL DE ENTREGA - EDITÁVEL
+    if (y > doc.internal.pageSize.height - 70) {
+        doc.addPage();
+        y = 20;
+    }
+    doc.setFontSize(11);
+    doc.setFont(undefined, 'bold');
+    doc.text('LOCAL DE ENTREGA:', margin, y);
+    y += 5;
+    doc.setFontSize(11);
+    doc.setFont(undefined, 'normal');
+    
+    const localPadrao = 'Rua Tadorna nº 472, sala 2, Novo Horizonte - Serra/ES  |  CEP: 29.163-318';
+    const localEntregaPDF = ordem.localEntrega && ordem.localEntrega.trim() !== '' 
+        ? ordem.localEntrega 
+        : localPadrao;
+    
+    doc.text(localEntregaPDF, margin, y);
+    
+    y += 10;
+    
+    // PRAZO E FRETE
+    if (y > doc.internal.pageSize.height - 60) {
+        doc.addPage();
+        y = 20;
+    }
+    doc.setFont(undefined, 'bold');
+    doc.setFontSize(11);
+    doc.text('PRAZO DE ENTREGA:', margin, y);
+    doc.setFont(undefined, 'normal');
+    doc.setFontSize(11);
+    doc.text(ordem.prazoEntrega || '-', margin + 42, y);
+    
+    doc.setFont(undefined, 'bold');
+    doc.setFontSize(11);
+    doc.text('FRETE:', pageWidth - margin - 35, y);
+    doc.setFont(undefined, 'normal');
+    doc.setFontSize(11);
+    doc.text(ordem.frete || '-', pageWidth - margin - 20, y);
+    
+    y += 10;
+    
+    // CONDIÇÕES DE PAGAMENTO
+    if (y > doc.internal.pageSize.height - 50) {
+        doc.addPage();
+        y = 20;
+    }
+    doc.setFontSize(11);
+    doc.setFont(undefined, 'bold');
+    doc.text('CONDIÇÕES DE PAGAMENTO:', margin, y);
+    y += 5;
+    doc.setFontSize(11);
+    doc.setFont(undefined, 'normal');
+    doc.text(`Forma: ${ordem.formaPagamento}`, margin, y);
+    y += 5;
+    doc.text(`Prazo: ${ordem.prazoPagamento}`, margin, y);
+    
+    if (ordem.dadosBancarios) {
+        y += 5;
+        doc.setFont(undefined, 'bold');
+        doc.text('Dados Bancários:', margin, y);
+        y += 5;
+        doc.setFont(undefined, 'normal');
+        const bancarioLines = doc.splitTextToSize(ordem.dadosBancarios, pageWidth - (2 * margin));
+        doc.text(bancarioLines, margin, y);
+        y += (bancarioLines.length * 5);
+    }
+    
+    y += 15;
+    
+    // DATA E ASSINATURA CENTRALIZADA
+    if (y > doc.internal.pageSize.height - 60) {
+        doc.addPage();
+        y = 20;
+    }
+    
+    const dataOrdem = new Date(ordem.dataOrdem + 'T00:00:00');
+    const dia = dataOrdem.getDate();
+    const meses = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 
+                   'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+    const mes = meses[dataOrdem.getMonth()];
+    const ano = dataOrdem.getFullYear();
+    
+    doc.setFontSize(10);
+    doc.setFont(undefined, 'normal');
+    doc.text(`Serra/ES, ${dia} de ${mes} de ${ano}`, pageWidth / 2, y, { align: 'center' });
+    
+    y += 5;
+    
+    // ASSINATURA (IMAGEM) - CENTRALIZADA
+    const assinatura = new Image();
+    assinatura.crossOrigin = 'anonymous';
+    assinatura.src = 'assinatura.png';
+    
+    assinatura.onload = function() {
+        try {
+            const imgWidth = 50;
+            const imgHeight = (assinatura.height / assinatura.width) * imgWidth;
+            doc.addImage(assinatura, 'PNG', (pageWidth / 2) - (imgWidth / 2), y, imgWidth, imgHeight);
+        } catch (e) {
+            console.log('Erro ao adicionar assinatura:', e);
+        }
+    };
+    
+    y += 20;
+    
+    // LINHA E DADOS DA DIRETORA - CENTRALIZADOS
+    doc.setLineWidth(0.5);
+    doc.line(pageWidth / 2 - 35, y, pageWidth / 2 + 35, y);
+    
+    y += 5;
+    doc.setFontSize(10);
+    doc.setFont(undefined, 'bold');
+    doc.text('Rosemeire Bicalho de Lima Gravino', pageWidth / 2, y, { align: 'center' });
+    
+    y += 5;
+    doc.setFontSize(9);
+    doc.setFont(undefined, 'normal');
+    doc.text('MG-10.078.568 / CPF: 045.160.616-78', pageWidth / 2, y, { align: 'center' });
+    
+    y += 5;
+    doc.text('Diretora', pageWidth / 2, y, { align: 'center' });
+    
+    y += 12;
+    
+    // ATENÇÃO SR. FORNECEDOR - APÓS ASSINATURA
+    if (y > doc.internal.pageSize.height - 30) {
+        doc.addPage();
+        y = 20;
+    }
+    
+    doc.setFillColor(240, 240, 240);
+    doc.rect(margin, y, pageWidth - (2 * margin), 22, 'F');
+    doc.setDrawColor(200, 200, 200);
+    doc.rect(margin, y, pageWidth - (2 * margin), 22, 'S');
+    
+    y += 6;
+    doc.setFontSize(10);
+    doc.setFont(undefined, 'bold');
+    doc.setTextColor(204, 112, 0);
+    doc.text('ATENÇÃO SR. FORNECEDOR:', margin + 5, y);
+    
+    y += 5;
+    doc.setTextColor(0, 0, 0);
+    doc.setFont(undefined, 'normal');
+    doc.setFontSize(9);
+    doc.text(`1) GENTILEZA MENCIONAR NA NOTA FISCAL O Nº ${ordem.numeroOrdem}`, margin + 5, y);
+    
+    y += 5;
+    doc.text('2) FAVOR ENVIAR A NOTA FISCAL ELETRÔNICA (ARQUIVO .XML) PARA: FINANCEIRO.IRCOMERCIO@GMAIL.COM', margin + 5, y);
+    
+    // Salvar PDF
+    doc.save(`Ordem_Compra_${ordem.numeroOrdem}.pdf`);
+    showToast('PDF gerado com sucesso!', 'success');
+}
