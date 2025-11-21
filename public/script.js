@@ -678,6 +678,8 @@ function generatePDF() {
     generatePDFForOrdem(ordem);
 }
 
+// SUBSTITUA APENAS A FUNÇÃO generatePDFForOrdem NO SEU SCRIPT.JS
+
 function generatePDFForOrdem(ordem) {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
@@ -691,8 +693,8 @@ function generatePDFForOrdem(ordem) {
     try {
         const logo = new Image();
         logo.src = 'I.R.-COMERCIO-E-MATERIAIS-ELETRICOS-LTDA.png';
-        doc.addImage(logo, 'PNG', margin, y, 40, 15); // x, y, largura, altura
-        y += 18; // Ajusta posição após a logo
+        doc.addImage(logo, 'PNG', margin, y, 40, 15);
+        y += 18;
     } catch (error) {
         console.log('Logo não encontrada');
     }
@@ -792,22 +794,21 @@ function generatePDFForOrdem(ordem) {
 
     y += 6;
 
-    // Configuração da tabela de itens
     const tableWidth = pageWidth - (2 * margin);
     const colWidths = {
-        item: tableWidth * 0.05,          // 5%
-        especificacao: tableWidth * 0.35,    // 35%
-        qtd: tableWidth * 0.08,              // 8%
-        unid: tableWidth * 0.08,             // 8%
-        valorUn: tableWidth * 0.12,          // 12%
-        ipi: tableWidth * 0.10,              // 10%
-        st: tableWidth * 0.10,               // 10%
-        total: tableWidth * 0.12             // 12%
+        item: tableWidth * 0.05,
+        especificacao: tableWidth * 0.35,
+        qtd: tableWidth * 0.08,
+        unid: tableWidth * 0.08,
+        valorUn: tableWidth * 0.12,
+        ipi: tableWidth * 0.10,
+        st: tableWidth * 0.10,
+        total: tableWidth * 0.12
     };
 
     const itemRowHeight = 10;
 
-    // Cabeçalho da tabela com fundo cinza escuro
+    // Cabeçalho da tabela
     doc.setFillColor(108, 117, 125);
     doc.setDrawColor(180, 180, 180);
     doc.rect(margin, y, tableWidth, itemRowHeight, 'FD');
@@ -818,45 +819,35 @@ function generatePDFForOrdem(ordem) {
 
     let xPos = margin;
 
-    // Desenha bordas verticais do cabeçalho
     doc.line(xPos, y, xPos, y + itemRowHeight);
-
-    // ITEM
     doc.text('ITEM', xPos + (colWidths.item / 2), y + 6.5, { align: 'center' });
     xPos += colWidths.item;
     doc.line(xPos, y, xPos, y + itemRowHeight);
 
-    // ESPECIFICAÇÃO
     doc.text('ESPECIFICAÇÃO', xPos + (colWidths.especificacao / 2), y + 6.5, { align: 'center' });
     xPos += colWidths.especificacao;
     doc.line(xPos, y, xPos, y + itemRowHeight);
 
-    // QTD
     doc.text('QTD', xPos + (colWidths.qtd / 2), y + 6.5, { align: 'center' });
     xPos += colWidths.qtd;
     doc.line(xPos, y, xPos, y + itemRowHeight);
 
-    // UNID
     doc.text('UNID', xPos + (colWidths.unid / 2), y + 6.5, { align: 'center' });
     xPos += colWidths.unid;
     doc.line(xPos, y, xPos, y + itemRowHeight);
 
-    // VALOR UN
     doc.text('VALOR UN', xPos + (colWidths.valorUn / 2), y + 6.5, { align: 'center' });
     xPos += colWidths.valorUn;
     doc.line(xPos, y, xPos, y + itemRowHeight);
 
-    // IPI
     doc.text('IPI', xPos + (colWidths.ipi / 2), y + 6.5, { align: 'center' });
     xPos += colWidths.ipi;
     doc.line(xPos, y, xPos, y + itemRowHeight);
 
-    // ST
     doc.text('ST', xPos + (colWidths.st / 2), y + 6.5, { align: 'center' });
     xPos += colWidths.st;
     doc.line(xPos, y, xPos, y + itemRowHeight);
 
-    // TOTAL
     doc.text('TOTAL', xPos + (colWidths.total / 2), y + 6.5, { align: 'center' });
     xPos += colWidths.total;
     doc.line(xPos, y, xPos, y + itemRowHeight);
@@ -869,18 +860,15 @@ function generatePDFForOrdem(ordem) {
     doc.setFontSize(8);
 
     ordem.items.forEach((item, index) => {
-        // Calcula altura necessária para a especificação
-        const maxWidth = colWidths.especificacao - 6; // margem interna
+        const maxWidth = colWidths.especificacao - 6;
         const especLines = doc.splitTextToSize(item.especificacao, maxWidth);
         const lineCount = especLines.length;
         const necessaryHeight = Math.max(itemRowHeight, lineCount * 4 + 4);
 
-        // Verifica se precisa de nova página (deixa margem de 30 na parte inferior)
         if (y + necessaryHeight > doc.internal.pageSize.height - 40) {
             doc.addPage();
             y = 20;
 
-            // Redesenha cabeçalho na nova página
             doc.setFillColor(108, 117, 125);
             doc.rect(margin, y, tableWidth, itemRowHeight, 'FD');
             doc.setTextColor(255, 255, 255);
@@ -920,7 +908,6 @@ function generatePDFForOrdem(ordem) {
             doc.setFontSize(8);
         }
 
-        // Linha zebrada
         if (index % 2 !== 0) {
             doc.setFillColor(240, 240, 240);
             doc.rect(margin, y, tableWidth, necessaryHeight, 'F');
@@ -928,53 +915,43 @@ function generatePDFForOrdem(ordem) {
 
         xPos = margin;
 
-        // Bordas verticais
         doc.setDrawColor(180, 180, 180);
         doc.setLineWidth(0.3);
         doc.line(xPos, y, xPos, y + necessaryHeight);
 
-        // ITEM - centralizado verticalmente
         doc.text(item.item.toString(), xPos + (colWidths.item / 2), y + (necessaryHeight / 2) + 1.5, { align: 'center' });
         xPos += colWidths.item;
         doc.line(xPos, y, xPos, y + necessaryHeight);
 
-        // ESPECIFICAÇÃO - com quebra de linha
         doc.text(especLines, xPos + 3, y + 4);
         xPos += colWidths.especificacao;
         doc.line(xPos, y, xPos, y + necessaryHeight);
 
-        // QTD - centralizado
         doc.text(item.quantidade.toString(), xPos + (colWidths.qtd / 2), y + (necessaryHeight / 2) + 1.5, { align: 'center' });
         xPos += colWidths.qtd;
         doc.line(xPos, y, xPos, y + necessaryHeight);
 
-        // UNID - centralizado
         doc.text(item.unidade, xPos + (colWidths.unid / 2), y + (necessaryHeight / 2) + 1.5, { align: 'center' });
         xPos += colWidths.unid;
         doc.line(xPos, y, xPos, y + necessaryHeight);
 
-        // VALOR UN - centralizado
         const valorUnFormatted = 'R$ ' + item.valorUnitario.toFixed(2).replace('.', ',');
         doc.text(valorUnFormatted, xPos + (colWidths.valorUn / 2), y + (necessaryHeight / 2) + 1.5, { align: 'center' });
         xPos += colWidths.valorUn;
         doc.line(xPos, y, xPos, y + necessaryHeight);
 
-        // IPI - centralizado
         doc.text(item.ipi || '-', xPos + (colWidths.ipi / 2), y + (necessaryHeight / 2) + 1.5, { align: 'center' });
         xPos += colWidths.ipi;
         doc.line(xPos, y, xPos, y + necessaryHeight);
 
-        // ST - centralizado
         doc.text(item.st || '-', xPos + (colWidths.st / 2), y + (necessaryHeight / 2) + 1.5, { align: 'center' });
         xPos += colWidths.st;
         doc.line(xPos, y, xPos, y + necessaryHeight);
 
-        // TOTAL - centralizado
         doc.text(item.valorTotal, xPos + (colWidths.total / 2), y + (necessaryHeight / 2) + 1.5, { align: 'center' });
         xPos += colWidths.total;
         doc.line(xPos, y, xPos, y + necessaryHeight);
 
-        // Borda horizontal inferior
         doc.line(margin, y + necessaryHeight, margin + tableWidth, y + necessaryHeight);
 
         y += necessaryHeight;
@@ -982,7 +959,7 @@ function generatePDFForOrdem(ordem) {
 
     y += 8;
 
-    // VALOR TOTAL E FRETE
+    // VALOR TOTAL
     if (y > doc.internal.pageSize.height - 80) {
         doc.addPage();
         y = 20;
@@ -1051,7 +1028,7 @@ function generatePDFForOrdem(ordem) {
     if (ordem.dadosBancarios) {
         y += 5;
         doc.setFontSize(11);
-    doc.setFont(undefined, 'normal');
+        doc.setFont(undefined, 'normal');
         doc.text(`Dados Bancários: ${ordem.dadosBancarios}`, margin, y);
     }
 
@@ -1073,20 +1050,17 @@ function generatePDFForOrdem(ordem) {
     doc.text(`Serra/ES, ${dia} de ${mes} de ${ano}`, pageWidth / 2, y, { align: 'center' });
 
     y += 15;
-    
-    // Linha de assinatura
     y += 15;
     y += 10;
 
-    // ASSINATURA (IMAGEM)
+    // ASSINATURA (IMAGEM) - CORRIGIDO
     try {
         const assinatura = new Image();
-        assinatura.src = 'assinatura.png.png'; // ou o nome correto do arquivo
-        doc.addImage(assinatura, 'PNG', pageWidth / 2 - 25, y - 10, 50, 15); // centralizada
+        assinatura.src = 'assinatura.png';
+        doc.addImage(assinatura, 'PNG', pageWidth / 2 - 25, y - 10, 50, 15);
         y += 10;
     } catch (error) {
         console.log('Assinatura não encontrada');
-        // Linha de assinatura (fallback se não encontrar a imagem)
         doc.setLineWidth(0.5);
         doc.line(pageWidth / 2 - 30, y, pageWidth / 2 + 30, y);
         y += 5;
@@ -1121,7 +1095,7 @@ function generatePDFForOrdem(ordem) {
     y += 5;
     doc.text('2. FAVOR ENVIAR A NOTA FISCAL ELETRÔNICA (.XML) PARA: FINANCEIRO.IRCOMERCIO@GMAIL.COM', pageWidth / 2, y, { align: 'center' });
 
-    // Salvar PDF
-    doc.save(`Ordem_${ordem.numeroOrdem}.pdf`);
+    // SALVAR COM NOME CORRETO: [RazaoSocial]-[NumeroOrdem].pdf
+    doc.save(`${ordem.razaoSocial}-${ordem.numeroOrdem}.pdf`);
     showToast('PDF gerado com sucesso!', 'success');
 }
