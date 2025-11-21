@@ -696,7 +696,7 @@ async function deleteOrdem(id) {
 }
 
 function showConfirm(message, options = {}) {
-    returnnew Promise((resolve) => {
+    return new Promise((resolve) => {
         const { title = 'Confirmação', confirmText = 'Confirmar', cancelText = 'Cancelar', type = 'warning' } = options;
 
         const modalHTML = `
