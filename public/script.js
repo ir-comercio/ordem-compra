@@ -99,50 +99,6 @@ function showTab(index) {
     
     if (tabButtons[index]) tabButtons[index].classList.add('active');
     if (tabContents[index]) tabContents[index].classList.add('active');
-    
-    updateNavigationButtons();
-}
-
-function nextTab() {
-    if (currentTab < tabs.length - 1) {
-        currentTab++;
-        showTab(currentTab);
-    } else {
-        const form = document.getElementById('ordemForm');
-        if (form) {
-            form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
-        }
-    }
-}
-
-function previousTab() {
-    if (currentTab > 0) {
-        currentTab--;
-        showTab(currentTab);
-    }
-}
-
-function updateNavigationButtons() {
-    const btnVoltar = document.getElementById('btnVoltar');
-    const btnProximo = document.getElementById('btnProximo');
-    
-    if (!btnVoltar || !btnProximo) return;
-    
-    if (currentTab === 0) {
-        btnVoltar.style.display = 'none';
-    } else {
-        btnVoltar.style.display = 'inline-flex';
-    }
-    
-    if (currentTab === tabs.length - 1) {
-        btnProximo.textContent = editingId ? 'Atualizar Ordem' : 'Registrar Ordem';
-        btnProximo.classList.remove('secondary');
-        btnProximo.classList.add('save');
-    } else {
-        btnProximo.textContent = 'Próximo';
-        btnProximo.classList.add('secondary');
-        btnProximo.classList.remove('save');
-    }
 }
 
 function switchInfoTab(tabId) {
@@ -160,8 +116,9 @@ function switchInfoTab(tabId) {
     document.getElementById(tabId).classList.add('active');
 }
 
+
 // ============================================
-// MODAL DE FORMULÁRIO
+// MODAL DE FORMULÁRIO - AJUSTE 3: SEM VOLTAR/PRÓXIMO
 // ============================================
 function openFormModal() {
     editingId = null;
@@ -190,7 +147,6 @@ function openFormModal() {
                     <form id="ordemForm" onsubmit="handleSubmit(event)">
                         <input type="hidden" id="editId" value="">
                         
-                        <!-- ABA GERAL -->
                         <div class="tab-content active" id="tab-geral">
                             <div class="form-grid">
                                 <div class="form-group">
@@ -208,7 +164,6 @@ function openFormModal() {
                             </div>
                         </div>
 
-                        <!-- ABA FORNECEDOR -->
                         <div class="tab-content" id="tab-fornecedor">
                             <div class="form-grid">
                                 <div class="form-group">
@@ -246,7 +201,6 @@ function openFormModal() {
                             </div>
                         </div>
 
-                        <!-- ABA PEDIDO -->
                         <div class="tab-content" id="tab-pedido">
                             <button type="button" onclick="addItem()" class="success small" style="margin-bottom: 1rem;">+ Adicionar Item</button>
                             <div style="overflow-x: auto;">
@@ -277,7 +231,6 @@ function openFormModal() {
                             </div>
                         </div>
 
-                        <!-- ABA ENTREGA -->
                         <div class="tab-content" id="tab-entrega">
                             <div class="form-grid">
                                 <div class="form-group">
@@ -295,7 +248,6 @@ function openFormModal() {
                             </div>
                         </div>
 
-                        <!-- ABA PAGAMENTO -->
                         <div class="tab-content" id="tab-pagamento">
                             <div class="form-grid">
                                 <div class="form-group">
@@ -314,8 +266,7 @@ function openFormModal() {
                         </div>
 
                         <div class="modal-actions">
-                            <button type="button" id="btnVoltar" onclick="previousTab()" class="secondary" style="display: none;">Voltar</button>
-                            <button type="button" id="btnProximo" onclick="nextTab()" class="secondary">Próximo</button>
+                            <button type="submit" class="save">Salvar Ordem</button>
                             <button type="button" onclick="closeFormModal(true)" class="secondary">Cancelar</button>
                         </div>
                     </form>
@@ -326,7 +277,6 @@ function openFormModal() {
 
     document.body.insertAdjacentHTML('beforeend', modalHTML);
     addItem();
-    updateNavigationButtons();
     setTimeout(() => document.getElementById('numeroOrdem')?.focus(), 100);
 }
 
@@ -344,6 +294,7 @@ function closeFormModal(showCancelMessage = false) {
         setTimeout(() => modal.remove(), 200);
     }
 }
+
 
 // ============================================
 // GESTÃO DE ITENS
@@ -483,8 +434,9 @@ function handleSubmit(event) {
     closeFormModal();
 }
 
+
 // ============================================
-// EDIÇÃO
+// EDIÇÃO - SEM VOLTAR/PRÓXIMO
 // ============================================
 function editOrdem(id) {
     const ordem = ordens.find(o => o.id === id);
@@ -516,7 +468,6 @@ function editOrdem(id) {
                     <form id="ordemForm" onsubmit="handleSubmit(event)">
                         <input type="hidden" id="editId" value="${ordem.id}">
                         
-                        <!-- ABA GERAL -->
                         <div class="tab-content active" id="tab-geral">
                             <div class="form-grid">
                                 <div class="form-group">
@@ -534,7 +485,6 @@ function editOrdem(id) {
                             </div>
                         </div>
 
-                        <!-- ABA FORNECEDOR -->
                         <div class="tab-content" id="tab-fornecedor">
                             <div class="form-grid">
                                 <div class="form-group">
@@ -572,7 +522,6 @@ function editOrdem(id) {
                             </div>
                         </div>
 
-                        <!-- ABA PEDIDO -->
                         <div class="tab-content" id="tab-pedido">
                             <button type="button" onclick="addItem()" class="success small" style="margin-bottom: 1rem;">+ Adicionar Item</button>
                             <div style="overflow-x: auto;">
@@ -603,7 +552,6 @@ function editOrdem(id) {
                             </div>
                         </div>
 
-                        <!-- ABA ENTREGA -->
                         <div class="tab-content" id="tab-entrega">
                             <div class="form-grid">
                                 <div class="form-group">
@@ -621,7 +569,6 @@ function editOrdem(id) {
                             </div>
                         </div>
 
-                        <!-- ABA PAGAMENTO -->
                         <div class="tab-content" id="tab-pagamento">
                             <div class="form-grid">
                                 <div class="form-group">
@@ -640,8 +587,7 @@ function editOrdem(id) {
                         </div>
 
                         <div class="modal-actions">
-                            <button type="button" id="btnVoltar" onclick="previousTab()" class="secondary" style="display: none;">Voltar</button>
-                            <button type="button" id="btnProximo" onclick="nextTab()" class="secondary">Próximo</button>
+                            <button type="submit" class="save">Atualizar Ordem</button>
                             <button type="button" onclick="closeFormModal(true)" class="secondary">Cancelar</button>
                         </div>
                     </form>
@@ -669,9 +615,8 @@ function editOrdem(id) {
     } else {
         addItem();
     }
-    
-    updateNavigationButtons();
 }
+
 
 // ============================================
 // EXCLUSÃO
@@ -872,9 +817,6 @@ function updateDisplay() {
     updateResponsaveisFilter();
 }
 
-// ============================================
-// DASHBOARD COM ALERTA
-// ============================================
 function updateDashboard() {
     const monthOrdens = getOrdensForCurrentMonth();
     const totalFechadas = monthOrdens.filter(o => o.status === 'fechada').length;
@@ -906,6 +848,7 @@ function updateDashboard() {
         }
     }
 }
+
 
 function updateTable() {
     const container = document.getElementById('ordensContainer');
@@ -970,11 +913,13 @@ function updateTable() {
             <td>
                 <span class="badge ${ordem.status}">${ordem.status.toUpperCase()}</span>
             </td>
-            <td class="actions-cell" style="text-align: center; white-space: nowrap;">
-                <button onclick="viewOrdem('${ordem.id}')" class="action-btn view" title="Ver detalhes">Ver</button>
-                <button onclick="editOrdem('${ordem.id}')" class="action-btn edit" title="Editar">Editar</button>
-                <button onclick="generatePDFFromTable('${ordem.id}')" class="action-btn success" title="Gerar PDF">PDF</button>
-                <button onclick="deleteOrdem('${ordem.id}')" class="action-btn delete" title="Excluir">Excluir</button>
+            <td class="actions-cell">
+                <div class="actions">
+                    <button onclick="viewOrdem('${ordem.id}')" class="action-btn view" title="Ver detalhes">Ver</button>
+                    <button onclick="editOrdem('${ordem.id}')" class="action-btn edit" title="Editar">Editar</button>
+                    <button onclick="generatePDFFromTable('${ordem.id}')" class="action-btn success" title="Gerar PDF">PDF</button>
+                    <button onclick="deleteOrdem('${ordem.id}')" class="action-btn delete" title="Excluir">Excluir</button>
+                </div>
             </td>
         </tr>
     `).join('');
@@ -1047,8 +992,9 @@ function showToast(message, type = 'success') {
     }, 3000);
 }
 
+
 // ============================================
-// GERAÇÃO DE PDF COMPLETA - CORRIGIDO
+// GERAÇÃO DE PDF - AJUSTE 6: assinatura.png
 // ============================================
 function generatePDFFromTable(id) {
     const ordem = ordens.find(o => o.id === id);
@@ -1079,7 +1025,7 @@ function generatePDFForOrdem(ordem) {
     const pageWidth = doc.internal.pageSize.width;
     const lineHeight = 5;
     
-    // LOGO NO CANTO SUPERIOR ESQUERDO
+    // LOGO
     const logo = new Image();
     logo.crossOrigin = 'anonymous';
     logo.src = 'I.R.-COMERCIO-E-MATERIAIS-ELETRICOS-LTDA.png';
@@ -1108,100 +1054,77 @@ function generatePDFForOrdem(ordem) {
     
     y += 12;
     
-    // DADOS PARA FATURAMENTO (FIXO)
+    // DADOS PARA FATURAMENTO
     doc.setFontSize(11);
     doc.setTextColor(0, 0, 0);
     doc.setFont(undefined, 'bold');
     doc.text('DADOS PARA FATURAMENTO', margin, y);
     
     y += lineHeight + 1;
-    doc.setFontSize(11);
     doc.setFont(undefined, 'bold');
     doc.text('I.R. COMÉRCIO E MATERIAIS ELÉTRICOS LTDA', margin, y);
     
     y += lineHeight + 1;
-    doc.setFontSize(11);
     doc.setFont(undefined, 'normal');
     doc.text('CNPJ: 33.149.502/0001-38  |  IE: 083.780.74-2', margin, y);
     
     y += lineHeight + 1;
-    doc.setFontSize(11);
-    doc.setFont(undefined, 'normal');
     doc.text('RUA TADORNA Nº 472, SALA 2', margin, y);
     
     y += lineHeight + 1;
-    doc.setFontSize(11);
-    doc.setFont(undefined, 'normal');
     doc.text('NOVO HORIZONTE - SERRA/ES  |  CEP: 29.163-318', margin, y);
     
     y += lineHeight + 1;
-    doc.setFontSize(11);
-    doc.setFont(undefined, 'normal');
     doc.text('TELEFAX: (27) 3209-4291  |  E-MAIL: COMERCIAL.IRCOMERCIO@GMAIL.COM', margin, y);
     
     y += 10;
     
     // DADOS DO FORNECEDOR
-    doc.setFontSize(11);
-    doc.setTextColor(0, 0, 0);
     doc.setFont(undefined, 'bold');
     doc.text('DADOS DO FORNECEDOR', margin, y);
     
     y += lineHeight + 1;
-    doc.setFontSize(11);
     doc.setFont(undefined, 'bold');
     doc.text(`${ordem.razaoSocial}`, margin, y);
 
     if (ordem.nomeFantasia) {
         y += lineHeight + 1;
-        doc.setFontSize(11);
         doc.setFont(undefined, 'normal');
         doc.text(`${ordem.nomeFantasia}`, margin, y);
     }
 
     y += lineHeight + 1;
-    doc.setFontSize(11);
     doc.setFont(undefined, 'normal');
     doc.text(`${ordem.cnpj}`, margin, y);
 
     if (ordem.enderecoFornecedor) {
         y += lineHeight + 1;
-        doc.setFontSize(11);
-        doc.setFont(undefined, 'normal');
         doc.text(`${ordem.enderecoFornecedor}`, margin, y);
     }
 
     if (ordem.contato) {
         y += lineHeight + 1;
-        doc.setFontSize(11);
-        doc.setFont(undefined, 'normal');
         doc.text(`${ordem.contato}`, margin, y);
     }
 
     if (ordem.telefone) {
         y += lineHeight;
-        doc.setFontSize(11);
-        doc.setFont(undefined, 'normal');
         doc.text(`${ordem.telefone}`, margin, y);
     }
 
     if (ordem.email) {
         y += lineHeight + 1;
-        doc.setFontSize(11);
-        doc.setFont(undefined, 'normal');
         doc.text(`${ordem.email}`, margin, y);
     }
     
     y += 10;
     
     // ITENS DO PEDIDO
-    doc.setFontSize(11);
     doc.setFont(undefined, 'bold');
     doc.text('ITENS DO PEDIDO', margin, y);
     
     y += 6;
     
-    // Configuração da tabela de itens
     const tableWidth = pageWidth - (2 * margin);
     const colWidths = {
         item: tableWidth * 0.05,
@@ -1216,7 +1139,7 @@ function generatePDFForOrdem(ordem) {
     
     const itemRowHeight = 10;
     
-    // Cabeçalho da tabela com fundo cinza escuro
+    // Cabeçalho da tabela
     doc.setFillColor(108, 117, 125);
     doc.setDrawColor(180, 180, 180);
     doc.rect(margin, y, tableWidth, itemRowHeight, 'FD');
@@ -1227,45 +1150,35 @@ function generatePDFForOrdem(ordem) {
     
     let xPos = margin;
     
-    // Desenha bordas verticais do cabeçalho
     doc.line(xPos, y, xPos, y + itemRowHeight);
-    
-    // ITEM
     doc.text('ITEM', xPos + (colWidths.item / 2), y + 6.5, { align: 'center' });
     xPos += colWidths.item;
     doc.line(xPos, y, xPos, y + itemRowHeight);
     
-    // ESPECIFICAÇÃO
     doc.text('ESPECIFICAÇÃO', xPos + (colWidths.especificacao / 2), y + 6.5, { align: 'center' });
     xPos += colWidths.especificacao;
     doc.line(xPos, y, xPos, y + itemRowHeight);
     
-    // QTD
     doc.text('QTD', xPos + (colWidths.qtd / 2), y + 6.5, { align: 'center' });
     xPos += colWidths.qtd;
     doc.line(xPos, y, xPos, y + itemRowHeight);
     
-    // UNID
     doc.text('UNID', xPos + (colWidths.unid / 2), y + 6.5, { align: 'center' });
     xPos += colWidths.unid;
     doc.line(xPos, y, xPos, y + itemRowHeight);
     
-    // VALOR UN
     doc.text('VALOR UN', xPos + (colWidths.valorUn / 2), y + 6.5, { align: 'center' });
     xPos += colWidths.valorUn;
     doc.line(xPos, y, xPos, y + itemRowHeight);
     
-    // IPI
     doc.text('IPI', xPos + (colWidths.ipi / 2), y + 6.5, { align: 'center' });
     xPos += colWidths.ipi;
     doc.line(xPos, y, xPos, y + itemRowHeight);
     
-    // ST
     doc.text('ST', xPos + (colWidths.st / 2), y + 6.5, { align: 'center' });
     xPos += colWidths.st;
     doc.line(xPos, y, xPos, y + itemRowHeight);
     
-    // TOTAL
     doc.text('TOTAL', xPos + (colWidths.total / 2), y + 6.5, { align: 'center' });
     xPos += colWidths.total;
     doc.line(xPos, y, xPos, y + itemRowHeight);
@@ -1283,11 +1196,10 @@ function generatePDFForOrdem(ordem) {
         const lineCount = especLines.length;
         const necessaryHeight = Math.max(itemRowHeight, lineCount * 4 + 4);
         
-        if (y + necessaryHeight > doc.internal.pageSize.height - 40) {
+        if (y + necessaryHeight > doc.internal.pageSize.height - 70) {
             doc.addPage();
             y = 20;
             
-            // Redesenha cabeçalho na nova página
             doc.setFillColor(108, 117, 125);
             doc.rect(margin, y, tableWidth, itemRowHeight, 'FD');
             doc.setTextColor(255, 255, 255);
@@ -1378,7 +1290,8 @@ function generatePDFForOrdem(ordem) {
     
     y += 8;
     
-    // VALOR TOTAL E FRETE
+    
+    // VALOR TOTAL
     if (y > doc.internal.pageSize.height - 80) {
         doc.addPage();
         y = 20;
@@ -1389,16 +1302,14 @@ function generatePDFForOrdem(ordem) {
     
     y += 10;
     
-    // LOCAL DE ENTREGA - EDITÁVEL
+    // LOCAL DE ENTREGA
     if (y > doc.internal.pageSize.height - 70) {
         doc.addPage();
         y = 20;
     }
-    doc.setFontSize(11);
     doc.setFont(undefined, 'bold');
     doc.text('LOCAL DE ENTREGA:', margin, y);
     y += 5;
-    doc.setFontSize(11);
     doc.setFont(undefined, 'normal');
     
     const localPadrao = 'Rua Tadorna nº 472, sala 2, Novo Horizonte - Serra/ES  |  CEP: 29.163-318';
@@ -1416,17 +1327,13 @@ function generatePDFForOrdem(ordem) {
         y = 20;
     }
     doc.setFont(undefined, 'bold');
-    doc.setFontSize(11);
     doc.text('PRAZO DE ENTREGA:', margin, y);
     doc.setFont(undefined, 'normal');
-    doc.setFontSize(11);
     doc.text(ordem.prazoEntrega || '-', margin + 42, y);
     
     doc.setFont(undefined, 'bold');
-    doc.setFontSize(11);
     doc.text('FRETE:', pageWidth - margin - 35, y);
     doc.setFont(undefined, 'normal');
-    doc.setFontSize(11);
     doc.text(ordem.frete || '-', pageWidth - margin - 20, y);
     
     y += 10;
@@ -1436,11 +1343,9 @@ function generatePDFForOrdem(ordem) {
         doc.addPage();
         y = 20;
     }
-    doc.setFontSize(11);
     doc.setFont(undefined, 'bold');
     doc.text('CONDIÇÕES DE PAGAMENTO:', margin, y);
     y += 5;
-    doc.setFontSize(11);
     doc.setFont(undefined, 'normal');
     doc.text(`Forma: ${ordem.formaPagamento}`, margin, y);
     y += 5;
@@ -1478,10 +1383,10 @@ function generatePDFForOrdem(ordem) {
     
     y += 5;
     
-    // ASSINATURA (IMAGEM) - CENTRALIZADA
+    // AJUSTE 6: ASSINATURA (IMAGEM assinatura.png) - CENTRALIZADA
     const assinatura = new Image();
     assinatura.crossOrigin = 'anonymous';
-    assinatura.src = 'assinatura.png.png';
+    assinatura.src = 'assinatura.png';
     
     assinatura.onload = function() {
         try {
@@ -1514,7 +1419,7 @@ function generatePDFForOrdem(ordem) {
     
     y += 12;
     
-    // ATENÇÃO SR. FORNECEDOR - APÓS ASSINATURA
+    // ATENÇÃO SR. FORNECEDOR
     if (y > doc.internal.pageSize.height - 30) {
         doc.addPage();
         y = 20;
@@ -1540,7 +1445,7 @@ function generatePDFForOrdem(ordem) {
     y += 5;
     doc.text('2) FAVOR ENVIAR A NOTA FISCAL ELETRÔNICA (ARQUIVO .XML) PARA: FINANCEIRO.IRCOMERCIO@GMAIL.COM', margin + 5, y);
     
-    // Salvar PDF
-    doc.save(`Ordem_Compra_${ordem.numeroOrdem}.pdf`);
+    // SALVAR PDF - NOME: RazaoSocial-NumeroOrdem.pdf
+    doc.save(`${ordem.razaoSocial}-${ordem.numeroOrdem}.pdf`);
     showToast('PDF gerado com sucesso!', 'success');
 }
