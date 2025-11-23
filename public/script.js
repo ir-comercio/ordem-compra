@@ -215,7 +215,7 @@ function openFormModal() {
                                             <th style="width: 100px;">IPI</th>
                                             <th style="width: 100px;">ST</th>
                                             <th style="width: 120px;">Total</th>
-                                            <th style="width: 80px;">Ações</th>
+                                            <th style="width: 80px;"></th>
                                         </tr>
                                     </thead>
                                     <tbody id="itemsBody"></tbody>
@@ -326,7 +326,7 @@ function addItem() {
         <td>
             <input type="text" class="item-total" readonly value="R$ 0,00">
         </td>
-        <td class="item-actions">
+        <td style="text-align: center;">
             <button type="button" class="danger small" onclick="removeItem(this)">Excluir</button>
         </td>
     `;
@@ -536,7 +536,7 @@ function editOrdem(id) {
                                             <th style="width: 100px;">IPI</th>
                                             <th style="width: 100px;">ST</th>
                                             <th style="width: 120px;">Total</th>
-                                            <th style="width: 80px;">Ações</th>
+                                            <th style="width: 80px;"></th>
                                         </tr>
                                     </thead>
                                     <tbody id="itemsBody"></tbody>
