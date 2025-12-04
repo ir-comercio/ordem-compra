@@ -964,7 +964,6 @@ function updateDashboard() {
     const totalFechadas = monthOrdens.filter(o => o.status === 'fechada').length;
     const totalAbertas = monthOrdens.filter(o => o.status === 'aberta').length;
     
-    // ALTERAÇÃO 3: Mostrar o último número de ordem em vez da contagem total
     const numeros = ordens
         .map(o => parseInt(o.numero_ordem || o.numeroOrdem))
         .filter(n => !isNaN(n));
@@ -1140,7 +1139,7 @@ function showToast(message, type = 'success') {
 }
 
 // ============================================
-// GERAÇÃO DE PDF - COM ASSINATURA
+// GERAÇÃO DE PDF - CORRIGIDO
 // ============================================
 function generatePDFFromTable(id) {
     const ordem = ordens.find(o => String(o.id) === String(id));
@@ -1155,27 +1154,10 @@ function generatePDFForOrdem(ordem) {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
     
-    let y = 15;
+    let y = 25; // Começar mais abaixo sem logo
     const margin = 15;
     const pageWidth = doc.internal.pageSize.width;
     const lineHeight = 5;
-    
-    // LOGO
-    const logo = new Image();
-    logo.crossOrigin = 'anonymous';
-    logo.src = 'I.R.-COMERCIO-E-MATERIAIS-ELETRICOS-LTDA.png';
-    
-    logo.onload = function() {
-        try {
-            const imgWidth = 50;
-            const imgHeight = (logo.height / logo.width) * imgWidth;
-            doc.addImage(logo, 'PNG', margin, 15, imgWidth, imgHeight);
-        } catch (e) {
-            console.log('Erro ao adicionar logo:', e);
-        }
-    };
-    
-    y = 35;
     
     // CABEÇALHO
     doc.setFontSize(18);
@@ -1518,26 +1500,23 @@ function generatePDFForOrdem(ordem) {
     
     y += 5;
     
-   // ASSINATURA (IMAGEM ASSINATURA.png) - CENTRALIZADA
+    // ASSINATURA (IMAGEM assinatura.png) - CENTRALIZADA
     const assinatura = new Image();
     assinatura.crossOrigin = 'anonymous';
-    assinatura.src = 'ASSINATURA.png';
+    assinatura.src = 'assinatura.png';
 
     assinatura.onload = function() {
         try {
             const imgWidth = 50;
             const imgHeight = (assinatura.height / assinatura.width) * imgWidth;
             
-            // Desenhar a imagem da assinatura PRIMEIRO
+            // Desenhar a imagem da assinatura
             doc.addImage(assinatura, 'PNG', (pageWidth / 2) - (imgWidth / 2), y + 2, imgWidth, imgHeight);
             
             // Calcular Y final após a imagem
             let yFinal = y + imgHeight + 5;
             
-            // LINHA E DADOS DA DIRETORA - CENTRALIZADOS (DEPOIS DA IMAGEM)
-            doc.setLineWidth(0.5);
-            doc.line(pageWidth / 2 - 35, yFinal, pageWidth / 2 + 35, yFinal);
-            
+            // DADOS DA DIRETORA - CENTRALIZADOS (SEM LINHA)
             yFinal += 5;
             doc.setFontSize(10);
             doc.setFont(undefined, 'bold');
@@ -1585,7 +1564,6 @@ function generatePDFForOrdem(ordem) {
             
         } catch (e) {
             console.log('Erro ao adicionar assinatura:', e);
-            // Se falhar, continuar sem a imagem
             gerarPDFSemAssinatura();
         }
     };
@@ -1598,9 +1576,6 @@ function generatePDFForOrdem(ordem) {
     // Função para gerar PDF sem assinatura
     function gerarPDFSemAssinatura() {
         let yFinal = y + 5;
-        
-        doc.setLineWidth(0.5);
-        doc.line(pageWidth / 2 - 35, yFinal, pageWidth / 2 + 35, yFinal);
         
         yFinal += 5;
         doc.setFontSize(10);
