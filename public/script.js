@@ -2,10 +2,10 @@
 // CONFIGURAÇÃO
 // ============================================
 const PORTAL_URL = 'https://ir-comercio-portal-zcan.onrender.com';
-const API_URL = 'https://ordem-de-compra.onrender.com/api'; // ALTERE AQUI PARA SEU URL
+const API_URL = 'https://ordem-de-compra.onrender.com/api';
 
 // ============================================
-// CONFIGURAÇÃO
+// VARIÁVEIS GLOBAIS
 // ============================================
 let ordens = [];
 let currentMonth = new Date();
@@ -13,39 +13,95 @@ let editingId = null;
 let itemCounter = 0;
 let currentTab = 0;
 let isOnline = false;
+let sessionToken = null;
+let lastDataHash = '';
 
 const tabs = ['tab-geral', 'tab-fornecedor', 'tab-pedido', 'tab-entrega', 'tab-pagamento'];
+
+console.log('🚀 Ordem de Compra iniciada');
 
 // ============================================
 // INICIALIZAÇÃO
 // ============================================
 document.addEventListener('DOMContentLoaded', () => {
-    loadFromLocalStorage();
+    verificarAutenticacao();
+});
+
+// ============================================
+// AUTENTICAÇÃO
+// ============================================
+function verificarAutenticacao() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const tokenFromUrl = urlParams.get('sessionToken');
+
+    if (tokenFromUrl) {
+        sessionToken = tokenFromUrl;
+        sessionStorage.setItem('ordemCompraSession', tokenFromUrl);
+        window.history.replaceState({}, document.title, window.location.pathname);
+    } else {
+        sessionToken = sessionStorage.getItem('ordemCompraSession');
+    }
+
+    if (!sessionToken) {
+        mostrarTelaAcessoNegado();
+        return;
+    }
+
+    inicializarApp();
+}
+
+function mostrarTelaAcessoNegado(mensagem = 'NÃO AUTORIZADO') {
+    document.body.innerHTML = `
+        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background: var(--bg-primary); color: var(--text-primary); text-align: center; padding: 2rem;">
+            <h1 style="font-size: 2.2rem; margin-bottom: 1rem;">${mensagem}</h1>
+            <p style="color: var(--text-secondary); margin-bottom: 2rem;">Somente usuários autenticados podem acessar esta área.</p>
+            <a href="${PORTAL_URL}" style="display: inline-block; background: var(--btn-register); color: white; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: 600;">Ir para o Portal</a>
+        </div>
+    `;
+}
+
+function inicializarApp() {
     updateDisplay();
     checkServerStatus();
-    startRealtimeSync();
-});
+    setInterval(checkServerStatus, 15000);
+    startPolling();
+}
 
 // ============================================
 // CONEXÃO E STATUS
 // ============================================
-function startRealtimeSync() {
-    setInterval(async () => {
-        await checkServerStatus();
-    }, 3000);
-}
-
 async function checkServerStatus() {
     try {
-        const response = await fetch(window.location.origin, { 
-            method: 'HEAD',
-            cache: 'no-cache'
+        const response = await fetch(`${API_URL}/ordens`, {
+            method: 'GET',
+            headers: { 
+                'X-Session-Token': sessionToken,
+                'Accept': 'application/json'
+            },
+            mode: 'cors'
         });
+
+        if (response.status === 401) {
+            sessionStorage.removeItem('ordemCompraSession');
+            mostrarTelaAcessoNegado('Sua sessão expirou');
+            return false;
+        }
+
+        const wasOffline = !isOnline;
         isOnline = response.ok;
+        
+        if (wasOffline && isOnline) {
+            console.log('✅ SERVIDOR ONLINE');
+            await loadOrdens();
+        }
+        
+        updateConnectionStatus();
+        return isOnline;
     } catch (error) {
         isOnline = false;
+        updateConnectionStatus();
+        return false;
     }
-    updateConnectionStatus();
 }
 
 function updateConnectionStatus() {
@@ -55,18 +111,48 @@ function updateConnectionStatus() {
     }
 }
 
-// ============================================
-// LOCAL STORAGE
-// ============================================
-function loadFromLocalStorage() {
-    const stored = localStorage.getItem('ordens');
-    if (stored) {
-        ordens = JSON.parse(stored);
-    }
+function startPolling() {
+    loadOrdens();
+    setInterval(() => {
+        if (isOnline) loadOrdens();
+    }, 10000);
 }
 
-function saveToLocalStorage() {
-    localStorage.setItem('ordens', JSON.stringify(ordens));
+// ============================================
+// CARREGAMENTO DE DADOS
+// ============================================
+async function loadOrdens() {
+    if (!isOnline) return;
+
+    try {
+        const response = await fetch(`${API_URL}/ordens`, {
+            method: 'GET',
+            headers: { 
+                'X-Session-Token': sessionToken,
+                'Accept': 'application/json'
+            },
+            mode: 'cors'
+        });
+
+        if (response.status === 401) {
+            sessionStorage.removeItem('ordemCompraSession');
+            mostrarTelaAcessoNegado('Sua sessão expirou');
+            return;
+        }
+
+        if (!response.ok) return;
+
+        const data = await response.json();
+        ordens = data;
+        
+        const newHash = JSON.stringify(ordens.map(o => o.id));
+        if (newHash !== lastDataHash) {
+            lastDataHash = newHash;
+            updateDisplay();
+        }
+    } catch (error) {
+        console.error('❌ Erro ao carregar:', error);
+    }
 }
 
 // ============================================
@@ -122,9 +208,8 @@ function switchInfoTab(tabId) {
     document.getElementById(tabId).classList.add('active');
 }
 
-
 // ============================================
-// MODAL DE FORMULÁRIO - AJUSTE 3: SEM VOLTAR/PRÓXIMO
+// MODAL DE FORMULÁRIO
 // ============================================
 function openFormModal() {
     editingId = null;
@@ -301,7 +386,6 @@ function closeFormModal(showCancelMessage = false) {
     }
 }
 
-
 // ============================================
 // GESTÃO DE ITENS
 // ============================================
@@ -379,7 +463,7 @@ function recalculateOrderTotal() {
 // ============================================
 // SUBMIT DO FORMULÁRIO
 // ============================================
-function handleSubmit(event) {
+async function handleSubmit(event) {
     event.preventDefault();
     
     const items = [];
@@ -400,7 +484,6 @@ function handleSubmit(event) {
     const timestamp = Date.now();
     
     const formData = {
-        id: editingId || timestamp.toString(),
         numeroOrdem: document.getElementById('numeroOrdem').value,
         responsavel: document.getElementById('responsavel').value,
         dataOrdem: document.getElementById('dataOrdem').value,
@@ -421,31 +504,72 @@ function handleSubmit(event) {
         formaPagamento: document.getElementById('formaPagamento').value,
         prazoPagamento: document.getElementById('prazoPagamento').value,
         dadosBancarios: document.getElementById('dadosBancarios').value,
-        status: 'aberta',
-        timestamp: timestamp
+        status: 'aberta'
     };
     
-    if (editingId) {
-        const index = ordens.findIndex(o => o.id === editingId);
-        formData.timestamp = ordens[index].timestamp;
-        ordens[index] = formData;
-        showToast('Ordem atualizada com sucesso!', 'success');
-    } else {
-        ordens.push(formData);
-        showToast('Ordem criada com sucesso!', 'success');
+    if (!isOnline) {
+        showToast('Sistema offline. Dados não foram salvos.', 'error');
+        closeFormModal();
+        return;
     }
-    
-    saveToLocalStorage();
-    updateDisplay();
-    closeFormModal();
+
+    try {
+        const url = editingId ? `${API_URL}/ordens/${editingId}` : `${API_URL}/ordens`;
+        const method = editingId ? 'PUT' : 'POST';
+
+        const response = await fetch(url, {
+            method,
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Session-Token': sessionToken,
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify(formData),
+            mode: 'cors'
+        });
+
+        if (response.status === 401) {
+            sessionStorage.removeItem('ordemCompraSession');
+            mostrarTelaAcessoNegado('Sua sessão expirou');
+            return;
+        }
+
+        if (!response.ok) {
+            let errorMessage = 'Erro ao salvar';
+            try {
+                const errorData = await response.json();
+                errorMessage = errorData.error || errorData.message || errorMessage;
+            } catch (e) {
+                errorMessage = `Erro ${response.status}: ${response.statusText}`;
+            }
+            throw new Error(errorMessage);
+        }
+
+        const savedData = await response.json();
+
+        if (editingId) {
+            const index = ordens.findIndex(o => String(o.id) === String(editingId));
+            if (index !== -1) ordens[index] = savedData;
+            showToast('Ordem atualizada com sucesso!', 'success');
+        } else {
+            ordens.push(savedData);
+            showToast('Ordem criada com sucesso!', 'success');
+        }
+
+        lastDataHash = JSON.stringify(ordens.map(o => o.id));
+        updateDisplay();
+        closeFormModal();
+    } catch (error) {
+        console.error('Erro completo:', error);
+        showToast(`Erro: ${error.message}`, 'error');
+    }
 }
 
-
 // ============================================
-// EDIÇÃO - SEM VOLTAR/PRÓXIMO
+// EDIÇÃO
 // ============================================
-function editOrdem(id) {
-    const ordem = ordens.find(o => o.id === id);
+async function editOrdem(id) {
+    const ordem = ordens.find(o => String(o.id) === String(id));
     if (!ordem) {
         showToast('Ordem não encontrada!', 'error');
         return;
@@ -478,7 +602,7 @@ function editOrdem(id) {
                             <div class="form-grid">
                                 <div class="form-group">
                                     <label for="numeroOrdem">Número da Ordem *</label>
-                                    <input type="text" id="numeroOrdem" value="${ordem.numeroOrdem}" required>
+                                    <input type="text" id="numeroOrdem" value="${ordem.numero_ordem || ordem.numeroOrdem}" required>
                                 </div>
                                 <div class="form-group">
                                     <label for="responsavel">Responsável *</label>
@@ -486,7 +610,7 @@ function editOrdem(id) {
                                 </div>
                                 <div class="form-group">
                                     <label for="dataOrdem">Data da Ordem *</label>
-                                    <input type="date" id="dataOrdem" value="${ordem.dataOrdem}" required>
+                                    <input type="date" id="dataOrdem" value="${ordem.data_ordem || ordem.dataOrdem}" required>
                                 </div>
                             </div>
                         </div>
@@ -495,11 +619,11 @@ function editOrdem(id) {
                             <div class="form-grid">
                                 <div class="form-group">
                                     <label for="razaoSocial">Razão Social *</label>
-                                    <input type="text" id="razaoSocial" value="${ordem.razaoSocial}" required>
+                                    <input type="text" id="razaoSocial" value="${ordem.razao_social || ordem.razaoSocial}" required>
                                 </div>
                                 <div class="form-group">
                                     <label for="nomeFantasia">Nome Fantasia</label>
-                                    <input type="text" id="nomeFantasia" value="${ordem.nomeFantasia || ''}">
+                                    <input type="text" id="nomeFantasia" value="${ordem.nome_fantasia || ordem.nomeFantasia || ''}">
                                 </div>
                                 <div class="form-group">
                                     <label for="cnpj">CNPJ *</label>
@@ -507,7 +631,7 @@ function editOrdem(id) {
                                 </div>
                                 <div class="form-group">
                                     <label for="enderecoFornecedor">Endereço</label>
-                                    <input type="text" id="enderecoFornecedor" value="${ordem.enderecoFornecedor || ''}">
+                                    <input type="text" id="enderecoFornecedor" value="${ordem.endereco_fornecedor || ordem.enderecoFornecedor || ''}">
                                 </div>
                                 <div class="form-group">
                                     <label for="site">Site</label>
@@ -550,7 +674,7 @@ function editOrdem(id) {
                             </div>
                             <div class="form-group" style="margin-top: 1rem;">
                                 <label for="valorTotalOrdem">Valor Total da Ordem</label>
-                                <input type="text" id="valorTotalOrdem" readonly value="${ordem.valorTotal}">
+                                <input type="text" id="valorTotalOrdem" readonly value="${ordem.valor_total || ordem.valorTotal}">
                             </div>
                             <div class="form-group">
                                 <label for="frete">Frete</label>
@@ -562,11 +686,11 @@ function editOrdem(id) {
                             <div class="form-grid">
                                 <div class="form-group">
                                     <label for="localEntrega">Local de Entrega</label>
-                                    <input type="text" id="localEntrega" value="${ordem.localEntrega || 'Rua Tadorna nº 472, sala 2, Novo Horizonte - Serra/ES  |  CEP: 29.163-318'}">
+                                    <input type="text" id="localEntrega" value="${ordem.local_entrega || ordem.localEntrega || 'Rua Tadorna nº 472, sala 2, Novo Horizonte - Serra/ES  |  CEP: 29.163-318'}">
                                 </div>
                                 <div class="form-group">
                                     <label for="prazoEntrega">Prazo de Entrega</label>
-                                    <input type="text" id="prazoEntrega" value="${ordem.prazoEntrega || ''}" placeholder="Ex: 10 dias úteis">
+                                    <input type="text" id="prazoEntrega" value="${ordem.prazo_entrega || ordem.prazoEntrega || ''}" placeholder="Ex: 10 dias úteis">
                                 </div>
                                 <div class="form-group">
                                     <label for="transporte">Transporte</label>
@@ -579,15 +703,15 @@ function editOrdem(id) {
                             <div class="form-grid">
                                 <div class="form-group">
                                     <label for="formaPagamento">Forma de Pagamento *</label>
-                                    <input type="text" id="formaPagamento" value="${ordem.formaPagamento}" required placeholder="Ex: Boleto, PIX, Cartão">
+                                    <input type="text" id="formaPagamento" value="${ordem.forma_pagamento || ordem.formaPagamento}" required placeholder="Ex: Boleto, PIX, Cartão">
                                 </div>
                                 <div class="form-group">
                                     <label for="prazoPagamento">Prazo de Pagamento *</label>
-                                    <input type="text" id="prazoPagamento" value="${ordem.prazoPagamento}" required placeholder="Ex: 30 dias">
+                                    <input type="text" id="prazoPagamento" value="${ordem.prazo_pagamento || ordem.prazoPagamento}" required placeholder="Ex: 30 dias">
                                 </div>
                                 <div class="form-group">
                                     <label for="dadosBancarios">Dados Bancários</label>
-                                    <textarea id="dadosBancarios" rows="3">${ordem.dadosBancarios || ''}</textarea>
+                                    <textarea id="dadosBancarios" rows="3">${ordem.dados_bancarios || ordem.dadosBancarios || ''}</textarea>
                                 </div>
                             </div>
                         </div>
@@ -612,10 +736,10 @@ function editOrdem(id) {
                 row.querySelector('.item-especificacao').value = item.especificacao || '';
                 row.querySelector('.item-qtd').value = item.quantidade || 1;
                 row.querySelector('.item-unid').value = item.unidade || 'UN';
-                row.querySelector('.item-valor').value = item.valorUnitario || 0;
+                row.querySelector('.item-valor').value = item.valorUnitario || item.valor_unitario || 0;
                 row.querySelector('.item-ipi').value = item.ipi || '';
                 row.querySelector('.item-st').value = item.st || '';
-                row.querySelector('.item-total').value = item.valorTotal || 'R$ 0,00';
+                row.querySelector('.item-total').value = item.valorTotal || item.valor_total || 'R$ 0,00';
             }
         });
     } else {
@@ -623,76 +747,88 @@ function editOrdem(id) {
     }
 }
 
-
 // ============================================
 // EXCLUSÃO
 // ============================================
 async function deleteOrdem(id) {
-    const confirmed = await showConfirm(
-        'Tem certeza que deseja excluir esta ordem?',
-        {
-            title: 'Excluir Ordem',
-            confirmText: 'Excluir',
-            cancelText: 'Cancelar',
-            type: 'warning'
+    if (!confirm('Tem certeza que deseja excluir esta ordem?')) return;
+
+    if (!isOnline) {
+        showToast('Sistema offline. Não foi possível excluir.', 'error');
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_URL}/ordens/${id}`, {
+            method: 'DELETE',
+            headers: {
+                'X-Session-Token': sessionToken,
+                'Accept': 'application/json'
+            },
+            mode: 'cors'
+        });
+
+        if (response.status === 401) {
+            sessionStorage.removeItem('ordemCompraSession');
+            mostrarTelaAcessoNegado('Sua sessão expirou');
+            return;
         }
-    );
 
-    if (!confirmed) return;
+        if (!response.ok) throw new Error('Erro ao deletar');
 
-    ordens = ordens.filter(o => o.id !== id);
-    saveToLocalStorage();
-    updateDisplay();
-    showToast('Ordem excluída com sucesso!', 'success');
-}
-
-function showConfirm(message, options = {}) {
-    return new Promise((resolve) => {
-        const { title = 'Confirmação', confirmText = 'Confirmar', cancelText = 'Cancelar', type = 'warning' } = options;
-
-        const modalHTML = `
-            <div class="modal-overlay" id="confirmModal" style="z-index: 10001; display: flex;">
-                <div class="modal-content" style="max-width: 450px;">
-                    <div class="modal-header">
-                        <h3 class="modal-title">${title}</h3>
-                    </div>
-                    <p style="margin: 1.5rem 0; color: var(--text-primary); font-size: 1rem; line-height: 1.6;">${message}</p>
-                    <div class="modal-actions">
-                        <button class="secondary" id="modalCancelBtn">${cancelText}</button>
-                        <button class="${type === 'warning' ? 'danger' : 'success'}" id="modalConfirmBtn">${confirmText}</button>
-                    </div>
-                </div>
-            </div>
-        `;
-
-        document.body.insertAdjacentHTML('beforeend', modalHTML);
-        const modal = document.getElementById('confirmModal');
-        const confirmBtn = document.getElementById('modalConfirmBtn');
-        const cancelBtn = document.getElementById('modalCancelBtn');
-
-        const closeModal = (result) => {
-            modal.style.animation = 'fadeOut 0.2s ease forwards';
-            setTimeout(() => { 
-                modal.remove(); 
-                resolve(result); 
-            }, 200);
-        };
-
-        confirmBtn.addEventListener('click', () => closeModal(true));
-        cancelBtn.addEventListener('click', () => closeModal(false));
-    });
+        ordens = ordens.filter(o => String(o.id) !== String(id));
+        lastDataHash = JSON.stringify(ordens.map(o => o.id));
+        updateDisplay();
+        showToast('Ordem excluída com sucesso!', 'success');
+    } catch (error) {
+        console.error('Erro ao deletar:', error);
+        showToast('Erro ao excluir ordem', 'error');
+    }
 }
 
 // ============================================
 // TOGGLE STATUS
 // ============================================
-function toggleStatus(id) {
-    const ordem = ordens.find(o => o.id === id);
-    if (ordem) {
-        ordem.status = ordem.status === 'aberta' ? 'fechada' : 'aberta';
-        saveToLocalStorage();
-        updateDisplay();
-        showToast(`Ordem marcada como ${ordem.status}!`, 'success');
+async function toggleStatus(id) {
+    const ordem = ordens.find(o => String(o.id) === String(id));
+    if (!ordem) return;
+
+    const novoStatus = ordem.status === 'aberta' ? 'fechada' : 'aberta';
+    const old = { status: ordem.status };
+    ordem.status = novoStatus;
+    updateDisplay();
+    
+    showToast(`Ordem marcada como ${novoStatus}!`, 'success');
+
+    if (isOnline) {
+        try {
+            const response = await fetch(`${API_URL}/ordens/${id}/status`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Session-Token': sessionToken,
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ status: novoStatus }),
+                mode: 'cors'
+            });
+
+            if (response.status === 401) {
+                sessionStorage.removeItem('ordemCompraSession');
+                mostrarTelaAcessoNegado('Sua sessão expirou');
+                return;
+            }
+
+            if (!response.ok) throw new Error('Erro ao atualizar');
+
+            const data = await response.json();
+            const index = ordens.findIndex(o => String(o.id) === String(id));
+            if (index !== -1) ordens[index] = data;
+        } catch (error) {
+            ordem.status = old.status;
+            updateDisplay();
+            showToast('Erro ao atualizar status', 'error');
+        }
     }
 }
 
@@ -700,16 +836,16 @@ function toggleStatus(id) {
 // VISUALIZAÇÃO
 // ============================================
 function viewOrdem(id) {
-    const ordem = ordens.find(o => o.id === id);
+    const ordem = ordens.find(o => String(o.id) === String(id));
     if (!ordem) return;
     
-    document.getElementById('modalNumero').textContent = ordem.numeroOrdem;
+    document.getElementById('modalNumero').textContent = ordem.numero_ordem || ordem.numeroOrdem;
     
     document.getElementById('info-tab-geral').innerHTML = `
         <div class="info-section">
             <h4>Informações Gerais</h4>
             <p><strong>Responsável:</strong> ${ordem.responsavel}</p>
-            <p><strong>Data:</strong> ${formatDate(ordem.dataOrdem)}</p>
+            <p><strong>Data:</strong> ${formatDate(ordem.data_ordem || ordem.dataOrdem)}</p>
             <p><strong>Status:</strong> <span class="badge ${ordem.status}">${ordem.status.toUpperCase()}</span></p>
         </div>
     `;
@@ -717,10 +853,10 @@ function viewOrdem(id) {
     document.getElementById('info-tab-fornecedor').innerHTML = `
         <div class="info-section">
             <h4>Dados do Fornecedor</h4>
-            <p><strong>Razão Social:</strong> ${ordem.razaoSocial}</p>
-            ${ordem.nomeFantasia ? `<p><strong>Nome Fantasia:</strong> ${ordem.nomeFantasia}</p>` : ''}
+            <p><strong>Razão Social:</strong> ${ordem.razao_social || ordem.razaoSocial}</p>
+            ${ordem.nome_fantasia || ordem.nomeFantasia ? `<p><strong>Nome Fantasia:</strong> ${ordem.nome_fantasia || ordem.nomeFantasia}</p>` : ''}
             <p><strong>CNPJ:</strong> ${ordem.cnpj}</p>
-            ${ordem.enderecoFornecedor ? `<p><strong>Endereço:</strong> ${ordem.enderecoFornecedor}</p>` : ''}
+            ${ordem.endereco_fornecedor || ordem.enderecoFornecedor ? `<p><strong>Endereço:</strong> ${ordem.endereco_fornecedor || ordem.enderecoFornecedor}</p>` : ''}
             ${ordem.site ? `<p><strong>Site:</strong> ${ordem.site}</p>` : ''}
             ${ordem.contato ? `<p><strong>Contato:</strong> ${ordem.contato}</p>` : ''}
             ${ordem.telefone ? `<p><strong>Telefone:</strong> ${ordem.telefone}</p>` : ''}
@@ -752,16 +888,16 @@ function viewOrdem(id) {
                                 <td>${item.especificacao}</td>
                                 <td>${item.quantidade}</td>
                                 <td>${item.unidade}</td>
-                                <td>R$ ${item.valorUnitario.toFixed(2)}</td>
+                                <td>R$ ${(item.valorUnitario || item.valor_unitario || 0).toFixed(2)}</td>
                                 <td>${item.ipi || '-'}</td>
                                 <td>${item.st || '-'}</td>
-                                <td>${item.valorTotal}</td>
+                                <td>${item.valorTotal || item.valor_total}</td>
                             </tr>
                         `).join('')}
                     </tbody>
                 </table>
             </div>
-            <p style="margin-top: 1rem; font-size: 1.1rem;"><strong>Valor Total:</strong> ${ordem.valorTotal}</p>
+            <p style="margin-top: 1rem; font-size: 1.1rem;"><strong>Valor Total:</strong> ${ordem.valor_total || ordem.valorTotal}</p>
             ${ordem.frete ? `<p><strong>Frete:</strong> ${ordem.frete}</p>` : ''}
         </div>
     `;
@@ -769,8 +905,8 @@ function viewOrdem(id) {
     document.getElementById('info-tab-entrega').innerHTML = `
         <div class="info-section">
             <h4>Informações de Entrega</h4>
-            ${ordem.localEntrega ? `<p><strong>Local de Entrega:</strong> ${ordem.localEntrega}</p>` : ''}
-            ${ordem.prazoEntrega ? `<p><strong>Prazo de Entrega:</strong> ${ordem.prazoEntrega}</p>` : ''}
+            ${ordem.local_entrega || ordem.localEntrega ? `<p><strong>Local de Entrega:</strong> ${ordem.local_entrega || ordem.localEntrega}</p>` : ''}
+            ${ordem.prazo_entrega || ordem.prazoEntrega ? `<p><strong>Prazo de Entrega:</strong> ${ordem.prazo_entrega || ordem.prazoEntrega}</p>` : ''}
             ${ordem.transporte ? `<p><strong>Transporte:</strong> ${ordem.transporte}</p>` : ''}
         </div>
     `;
@@ -778,9 +914,9 @@ function viewOrdem(id) {
     document.getElementById('info-tab-pagamento').innerHTML = `
         <div class="info-section">
             <h4>Dados de Pagamento</h4>
-            <p><strong>Forma de Pagamento:</strong> ${ordem.formaPagamento}</p>
-            <p><strong>Prazo de Pagamento:</strong> ${ordem.prazoPagamento}</p>
-            ${ordem.dadosBancarios ? `<p><strong>Dados Bancários:</strong> ${ordem.dadosBancarios}</p>` : ''}
+            <p><strong>Forma de Pagamento:</strong> ${ordem.forma_pagamento || ordem.formaPagamento}</p>
+            <p><strong>Prazo de Pagamento:</strong> ${ordem.prazo_pagamento || ordem.prazoPagamento}</p>
+            ${ordem.dados_bancarios || ordem.dadosBancarios ? `<p><strong>Dados Bancários:</strong> ${ordem.dados_bancarios || ordem.dadosBancarios}</p>` : ''}
         </div>
     `;
     
@@ -828,7 +964,13 @@ function updateDashboard() {
     const totalFechadas = monthOrdens.filter(o => o.status === 'fechada').length;
     const totalAbertas = monthOrdens.filter(o => o.status === 'aberta').length;
     
-    document.getElementById('totalOrdens').textContent = monthOrdens.length;
+    // ALTERAÇÃO 3: Mostrar o último número de ordem em vez da contagem total
+    const numeros = ordens
+        .map(o => parseInt(o.numero_ordem || o.numeroOrdem))
+        .filter(n => !isNaN(n));
+    const ultimoNumero = numeros.length > 0 ? Math.max(...numeros) : 0;
+    
+    document.getElementById('totalOrdens').textContent = ultimoNumero;
     document.getElementById('totalFechadas').textContent = totalFechadas;
     document.getElementById('totalAbertas').textContent = totalAbertas;
     
@@ -855,7 +997,6 @@ function updateDashboard() {
     }
 }
 
-
 function updateTable() {
     const container = document.getElementById('ordensContainer');
     let filteredOrdens = getOrdensForCurrentMonth();
@@ -866,9 +1007,9 @@ function updateTable() {
     
     if (search) {
         filteredOrdens = filteredOrdens.filter(o => 
-            o.numeroOrdem.toLowerCase().includes(search) ||
-            o.razaoSocial.toLowerCase().includes(search) ||
-            o.responsavel.toLowerCase().includes(search)
+            (o.numero_ordem || o.numeroOrdem || '').toLowerCase().includes(search) ||
+            (o.razao_social || o.razaoSocial || '').toLowerCase().includes(search) ||
+            (o.responsavel || '').toLowerCase().includes(search)
         );
     }
     
@@ -892,8 +1033,8 @@ function updateTable() {
     }
     
     filteredOrdens.sort((a, b) => {
-        const numA = parseInt(a.numeroOrdem);
-        const numB = parseInt(b.numeroOrdem);
+        const numA = parseInt(a.numero_ordem || a.numeroOrdem);
+        const numB = parseInt(b.numero_ordem || b.numeroOrdem);
         return numA - numB;
     });
     
@@ -911,11 +1052,11 @@ function updateTable() {
                     <label for="check-${ordem.id}" class="checkbox-label-styled"></label>
                 </div>
             </td>
-            <td><strong>${ordem.numeroOrdem}</strong></td>
+            <td><strong>${ordem.numero_ordem || ordem.numeroOrdem}</strong></td>
             <td>${ordem.responsavel}</td>
-            <td>${ordem.razaoSocial}</td>
-            <td style="white-space: nowrap;">${formatDate(ordem.dataOrdem)}</td>
-            <td><strong>${ordem.valorTotal}</strong></td>
+            <td>${ordem.razao_social || ordem.razaoSocial}</td>
+            <td style="white-space: nowrap;">${formatDate(ordem.data_ordem || ordem.dataOrdem)}</td>
+            <td><strong>${ordem.valor_total || ordem.valorTotal}</strong></td>
             <td>
                 <span class="badge ${ordem.status}">${ordem.status.toUpperCase()}</span>
             </td>
@@ -958,7 +1099,7 @@ function updateResponsaveisFilter() {
 // ============================================
 function getOrdensForCurrentMonth() {
     return ordens.filter(ordem => {
-        const ordemDate = new Date(ordem.dataOrdem);
+        const ordemDate = new Date((ordem.data_ordem || ordem.dataOrdem) + 'T00:00:00');
         return ordemDate.getMonth() === currentMonth.getMonth() &&
                ordemDate.getFullYear() === currentMonth.getFullYear();
     });
@@ -966,7 +1107,7 @@ function getOrdensForCurrentMonth() {
 
 function getNextOrderNumber() {
     const existingNumbers = ordens
-        .map(o => parseInt(o.numeroOrdem))
+        .map(o => parseInt(o.numero_ordem || o.numeroOrdem))
         .filter(n => !isNaN(n));
     
     const nextNum = existingNumbers.length > 0 ? Math.max(...existingNumbers) + 1 : 1250;
@@ -998,23 +1139,11 @@ function showToast(message, type = 'success') {
     }, 3000);
 }
 
-
 // ============================================
-// GERAÇÃO DE PDF - AJUSTE 6: assinatura.png
+// GERAÇÃO DE PDF - COM ASSINATURA
 // ============================================
 function generatePDFFromTable(id) {
-    const ordem = ordens.find(o => o.id === id);
-    if (!ordem) {
-        showToast('Ordem não encontrada!', 'error');
-        return;
-    }
-    generatePDFForOrdem(ordem);
-}
-
-function generatePDF() {
-    const modalNumero = document.getElementById('modalNumero').textContent;
-    const ordem = ordens.find(o => o.numeroOrdem === modalNumero);
-    
+    const ordem = ordens.find(o => String(o.id) === String(id));
     if (!ordem) {
         showToast('Ordem não encontrada!', 'error');
         return;
@@ -1056,7 +1185,7 @@ function generatePDFForOrdem(ordem) {
     
     y += 8;
     doc.setFontSize(14);
-    doc.text(`Nº ${ordem.numeroOrdem}`, pageWidth / 2, y, { align: 'center' });
+    doc.text(`Nº ${ordem.numero_ordem || ordem.numeroOrdem}`, pageWidth / 2, y, { align: 'center' });
     
     y += 12;
     
@@ -1091,21 +1220,21 @@ function generatePDFForOrdem(ordem) {
     
     y += lineHeight + 1;
     doc.setFont(undefined, 'bold');
-    doc.text(`${ordem.razaoSocial}`, margin, y);
+    doc.text(`${ordem.razao_social || ordem.razaoSocial}`, margin, y);
 
-    if (ordem.nomeFantasia) {
+    if (ordem.nome_fantasia || ordem.nomeFantasia) {
         y += lineHeight + 1;
         doc.setFont(undefined, 'normal');
-        doc.text(`${ordem.nomeFantasia}`, margin, y);
+        doc.text(`${ordem.nome_fantasia || ordem.nomeFantasia}`, margin, y);
     }
 
     y += lineHeight + 1;
     doc.setFont(undefined, 'normal');
     doc.text(`${ordem.cnpj}`, margin, y);
 
-    if (ordem.enderecoFornecedor) {
+    if (ordem.endereco_fornecedor || ordem.enderecoFornecedor) {
         y += lineHeight + 1;
-        doc.text(`${ordem.enderecoFornecedor}`, margin, y);
+        doc.text(`${ordem.endereco_fornecedor || ordem.enderecoFornecedor}`, margin, y);
     }
 
     if (ordem.contato) {
@@ -1272,7 +1401,8 @@ function generatePDFForOrdem(ordem) {
         xPos += colWidths.unid;
         doc.line(xPos, y, xPos, y + necessaryHeight);
         
-        const valorUnFormatted = 'R$ ' + item.valorUnitario.toFixed(2).replace('.', ',');
+        const valorUn = item.valorUnitario || item.valor_unitario || 0;
+        const valorUnFormatted = 'R$ ' + parseFloat(valorUn).toFixed(2).replace('.', ',');
         doc.text(valorUnFormatted, xPos + (colWidths.valorUn / 2), y + (necessaryHeight / 2) + 1.5, { align: 'center' });
         xPos += colWidths.valorUn;
         doc.line(xPos, y, xPos, y + necessaryHeight);
@@ -1285,7 +1415,7 @@ function generatePDFForOrdem(ordem) {
         xPos += colWidths.st;
         doc.line(xPos, y, xPos, y + necessaryHeight);
         
-        doc.text(item.valorTotal, xPos + (colWidths.total / 2), y + (necessaryHeight / 2) + 1.5, { align: 'center' });
+        doc.text(item.valorTotal || item.valor_total, xPos + (colWidths.total / 2), y + (necessaryHeight / 2) + 1.5, { align: 'center' });
         xPos += colWidths.total;
         doc.line(xPos, y, xPos, y + necessaryHeight);
         
@@ -1296,7 +1426,6 @@ function generatePDFForOrdem(ordem) {
     
     y += 8;
     
-    
     // VALOR TOTAL
     if (y > doc.internal.pageSize.height - 80) {
         doc.addPage();
@@ -1304,7 +1433,7 @@ function generatePDFForOrdem(ordem) {
     }
     doc.setFontSize(11);
     doc.setFont(undefined, 'bold');
-    doc.text(`VALOR TOTAL: ${ordem.valorTotal}`, margin, y);
+    doc.text(`VALOR TOTAL: ${ordem.valor_total || ordem.valorTotal}`, margin, y);
     
     y += 10;
     
@@ -1319,8 +1448,8 @@ function generatePDFForOrdem(ordem) {
     doc.setFont(undefined, 'normal');
     
     const localPadrao = 'RUA TADORNA Nº 472, SALA 2, NOVO HORIZONTE - SERRA/ES  |  CEP: 29.163-318';
-    const localEntregaPDF = ordem.localEntrega && ordem.localEntrega.trim() !== '' 
-        ? ordem.localEntrega 
+    const localEntregaPDF = (ordem.local_entrega || ordem.localEntrega || '').trim() !== '' 
+        ? (ordem.local_entrega || ordem.localEntrega)
         : localPadrao;
     
     doc.text(localEntregaPDF, margin, y);
@@ -1335,7 +1464,7 @@ function generatePDFForOrdem(ordem) {
     doc.setFont(undefined, 'bold');
     doc.text('PRAZO DE ENTREGA:', margin, y);
     doc.setFont(undefined, 'normal');
-    doc.text(ordem.prazoEntrega || '-', margin + 42, y);
+    doc.text(ordem.prazo_entrega || ordem.prazoEntrega || '-', margin + 42, y);
     
     doc.setFont(undefined, 'bold');
     doc.text('FRETE:', pageWidth - margin - 35, y);
@@ -1353,17 +1482,17 @@ function generatePDFForOrdem(ordem) {
     doc.text('CONDIÇÕES DE PAGAMENTO:', margin, y);
     y += 5;
     doc.setFont(undefined, 'normal');
-    doc.text(`Forma: ${ordem.formaPagamento}`, margin, y);
+    doc.text(`Forma: ${ordem.forma_pagamento || ordem.formaPagamento}`, margin, y);
     y += 5;
-    doc.text(`Prazo: ${ordem.prazoPagamento}`, margin, y);
+    doc.text(`Prazo: ${ordem.prazo_pagamento || ordem.prazoPagamento}`, margin, y);
     
-    if (ordem.dadosBancarios) {
+    if (ordem.dados_bancarios || ordem.dadosBancarios) {
         y += 5;
         doc.setFont(undefined, 'bold');
         doc.text('Dados Bancários:', margin, y);
         y += 5;
         doc.setFont(undefined, 'normal');
-        const bancarioLines = doc.splitTextToSize(ordem.dadosBancarios, pageWidth - (2 * margin));
+        const bancarioLines = doc.splitTextToSize(ordem.dados_bancarios || ordem.dadosBancarios, pageWidth - (2 * margin));
         doc.text(bancarioLines, margin, y);
         y += (bancarioLines.length * 5);
     }
@@ -1376,7 +1505,7 @@ function generatePDFForOrdem(ordem) {
         y = 20;
     }
     
-    const dataOrdem = new Date(ordem.dataOrdem + 'T00:00:00');
+    const dataOrdem = new Date((ordem.data_ordem || ordem.dataOrdem) + 'T00:00:00');
     const dia = dataOrdem.getDate();
     const meses = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 
                    'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
@@ -1389,7 +1518,7 @@ function generatePDFForOrdem(ordem) {
     
     y += 5;
     
-    // AJUSTE 6: ASSINATURA (IMAGEM assinatura.png) - CENTRALIZADA
+    // ASSINATURA (IMAGEM ASSINATURA.png) - CENTRALIZADA
     const assinatura = new Image();
     assinatura.crossOrigin = 'anonymous';
     assinatura.src = 'ASSINATURA.png';
@@ -1446,12 +1575,12 @@ function generatePDFForOrdem(ordem) {
     doc.setTextColor(0, 0, 0);
     doc.setFont(undefined, 'normal');
     doc.setFontSize(9);
-    doc.text(`1) GENTILEZA MENCIONAR NA NOTA FISCAL O Nº ${ordem.numeroOrdem}`, margin + 5, y);
+    doc.text(`1) GENTILEZA MENCIONAR NA NOTA FISCAL O Nº ${ordem.numero_ordem || ordem.numeroOrdem}`, margin + 5, y);
     
     y += 5;
     doc.text('2) FAVOR ENVIAR A NOTA FISCAL ELETRÔNICA (ARQUIVO .XML) PARA: FINANCEIRO.IRCOMERCIO@GMAIL.COM', margin + 5, y);
     
-    // SALVAR PDF - NOME: RazaoSocial-NumeroOrdem.pdf
-    doc.save(`${ordem.razaoSocial}-${ordem.numeroOrdem}.pdf`);
+    // SALVAR PDF
+    doc.save(`${ordem.razao_social || ordem.razaoSocial}-${ordem.numero_ordem || ordem.numeroOrdem}.pdf`);
     showToast('PDF gerado com sucesso!', 'success');
 }
