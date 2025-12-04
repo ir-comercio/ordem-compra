@@ -28,6 +28,7 @@
     --btn-view: #fa7000;
     --btn-save: #00cc77;
     --alert-color: #ef4444;
+    --fab-blue: #0077c7;
 }
 
 /* ============================================
@@ -66,6 +67,52 @@ body {
     line-height: 1.6;
     transition: background-color 0.3s ease, color 0.3s ease;
     overflow-y: scroll;
+}
+
+/* ============================================
+   BOTÃO FLUTUANTE (FAB) - ATUALIZADO
+   ============================================ */
+.fab-button {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    width: 56px;
+    height: 56px;
+    background: var(--fab-blue);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0, 119, 199, 0.4);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    z-index: 1000;
+    border: none;
+    padding: 0;
+    margin: 0;
+}
+
+.fab-button:hover {
+    background: #0066b3;
+    box-shadow: 0 6px 16px rgba(0, 119, 199, 0.5);
+    transform: scale(1.05);
+}
+
+.fab-button:active {
+    transform: scale(0.95);
+}
+
+.fab-button::before {
+    content: '+';
+    font-size: 28px;
+    font-weight: 300;
+    color: white;
+    line-height: 1;
+}
+
+/* Remover o wrapper antigo do botão */
+.button-wrapper {
+    display: none;
 }
 
 /* ============================================
@@ -164,7 +211,7 @@ body {
 .container {
     max-width: 1800px;
     margin: 2rem auto;
-    padding: 0 1.5rem;
+    padding: 0 1.5rem 80px 1.5rem; /* Adicionado padding-bottom para o FAB */
 }
 
 .header {
@@ -367,7 +414,6 @@ button.success, button.save, button[type="submit"], button[onclick*="generatePDF
     background: var(--btn-save); 
 }
 
-/* AJUSTE 4: AÇÕES ALINHADAS VERTICALMENTE */
 .action-btn {
     padding: 8px 12px;
     font-size: 0.85rem;
@@ -389,10 +435,6 @@ button.success, button.save, button[type="submit"], button[onclick*="generatePDF
     flex-wrap: wrap;
     justify-content: center;
     align-items: center;
-}
-
-.button-wrapper { 
-    margin-bottom: 1.5rem; 
 }
 
 /* ============================================
@@ -417,7 +459,6 @@ label {
     font-size: 0.9rem;
 }
 
-/* AJUSTE 5: TEXTO MAIÚSCULO AUTOMÁTICO */
 input:not([type="checkbox"]):not([type="date"]):not([type="number"]):not([readonly]), 
 select:not([readonly]), 
 textarea:not([readonly]) {
@@ -737,7 +778,6 @@ tbody tr:nth-child(even).row-fechada {
     animation: scaleIn 0.2s ease forwards;
 }
 
-/* AJUSTE 1: TABELA MODAL OCUPANDO TODO ESPAÇO */
 .modal-content .info-section {
     width: 100%;
 }
@@ -790,7 +830,6 @@ tbody tr:nth-child(even).row-fechada {
     color: var(--text-primary);
 }
 
-/* AJUSTE 3: BOTÕES SEMPRE VISÍVEIS - SEM VOLTAR/PRÓXIMO */
 .modal-actions {
     display: flex;
     gap: 0.75rem;
@@ -931,7 +970,7 @@ tbody tr:nth-child(even).row-fechada {
    ============================================ */
 @media (max-width: 768px) {
     .container {
-        padding: 0 1rem;
+        padding: 0 1rem 80px 1rem;
         margin: 1rem auto;
     }
 
@@ -1007,6 +1046,18 @@ tbody tr:nth-child(even).row-fechada {
     .month-nav-btn {
         padding: 6px 12px;
         font-size: 0.85rem;
+    }
+    
+    /* FAB no mobile */
+    .fab-button {
+        bottom: 16px;
+        right: 16px;
+        width: 48px;
+        height: 48px;
+    }
+    
+    .fab-button::before {
+        font-size: 24px;
     }
 }
 
@@ -1103,7 +1154,6 @@ tbody tr:nth-child(even).row-fechada {
     background: #9CA3AF;
 }
 
-/* Scrollbar dos modais - cinza */
 .modal-content::-webkit-scrollbar {
     width: 10px;
 }
@@ -1173,6 +1223,7 @@ tbody tr:nth-child(even).row-fechada {
     
     .header,
     .button-wrapper,
+    .fab-button,
     .filter-section,
     .connection-status,
     .modal-overlay,
