@@ -1,12 +1,6 @@
-// ============================================
-// CONFIGURAÇÃO
-// ============================================
 const PORTAL_URL = 'https://ir-comercio-portal-zcan.onrender.com';
 const API_URL = 'https://ordem-compra.onrender.com/api';
 
-// ============================================
-// VARIÁVEIS GLOBAIS
-// ============================================
 let ordens = [];
 let currentMonth = new Date();
 let editingId = null;
@@ -15,22 +9,16 @@ let currentTab = 0;
 let isOnline = false;
 let sessionToken = null;
 let lastDataHash = '';
-let fornecedoresCache = {}; // Cache de fornecedores
+let fornecedoresCache = {};
 
 const tabs = ['tab-geral', 'tab-fornecedor', 'tab-pedido', 'tab-entrega', 'tab-pagamento'];
 
-console.log('🚀 Ordem de Compra iniciada');
+console.log('Ordem de Compra iniciada');
 
-// ============================================
-// INICIALIZAÇÃO
-// ============================================
 document.addEventListener('DOMContentLoaded', () => {
     verificarAutenticacao();
 });
 
-// ============================================
-// AUTENTICAÇÃO
-// ============================================
 function verificarAutenticacao() {
     const urlParams = new URLSearchParams(window.location.search);
     const tokenFromUrl = urlParams.get('sessionToken');
