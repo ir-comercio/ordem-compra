@@ -1636,3 +1636,4 @@ assinatura.onerror = function() {
     doc.save(`${ordem.razao_social || ordem.razaoSocial}-${ordem.numero_ordem || ordem.numeroOrdem}.pdf`);
     showToast('Ordem de Compra disponível', 'success');
 };
+}
