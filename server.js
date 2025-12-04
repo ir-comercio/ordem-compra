@@ -6,36 +6,39 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 10000;
 
-// Supabase Client
+// Validar variáveis de ambiente
+if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    console.error('❌ ERRO: Variáveis SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY são obrigatórias');
+    process.exit(1);
+}
+
+// Supabase Client com service_role key (bypass RLS)
 const supabase = createClient(
     process.env.SUPABASE_URL,
-    process.env.SUPABASE_KEY
+    process.env.SUPABASE_SERVICE_ROLE_KEY,
+    {
+        auth: {
+            autoRefreshToken: false,
+            persistSession: false
+        }
+    }
 );
 
 // Middleware
-app.use(cors());
+app.use(cors({
+    origin: '*',
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+    credentials: true
+}));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.static('public'));
-
-// Session Token Middleware
-const SESSION_TOKEN = process.env.SESSION_TOKEN;
-
-function verifySession(req, res, next) {
-    const token = req.headers['x-session-token'];
-    
-    if (!token || token !== SESSION_TOKEN) {
-        return res.status(401).json({ error: 'Não autorizado' });
-    }
-    
-    next();
-}
 
 // ============================================
 // ROTAS DA API
 // ============================================
 
 // GET - Buscar todas as ordens
-app.get('/api/ordens', verifySession, async (req, res) => {
+app.get('/api/ordens', async (req, res) => {
     try {
         const { data, error } = await supabase
             .from('ordens_compra')
@@ -55,7 +58,7 @@ app.get('/api/ordens', verifySession, async (req, res) => {
 });
 
 // GET - Buscar ordem por ID
-app.get('/api/ordens/:id', verifySession, async (req, res) => {
+app.get('/api/ordens/:id', async (req, res) => {
     try {
         const { id } = req.params;
 
@@ -82,7 +85,7 @@ app.get('/api/ordens/:id', verifySession, async (req, res) => {
 });
 
 // POST - Criar nova ordem
-app.post('/api/ordens', verifySession, async (req, res) => {
+app.post('/api/ordens', async (req, res) => {
     try {
         const ordemData = {
             numero_ordem: req.body.numeroOrdem,
@@ -127,7 +130,7 @@ app.post('/api/ordens', verifySession, async (req, res) => {
 });
 
 // PUT - Atualizar ordem
-app.put('/api/ordens/:id', verifySession, async (req, res) => {
+app.put('/api/ordens/:id', async (req, res) => {
     try {
         const { id } = req.params;
 
@@ -152,8 +155,7 @@ app.put('/api/ordens/:id', verifySession, async (req, res) => {
             forma_pagamento: req.body.formaPagamento,
             prazo_pagamento: req.body.prazoPagamento,
             dados_bancarios: req.body.dadosBancarios || null,
-            status: req.body.status || 'aberta',
-            updated_at: new Date().toISOString()
+            status: req.body.status || 'aberta'
         };
 
         const { data, error } = await supabase
@@ -180,17 +182,18 @@ app.put('/api/ordens/:id', verifySession, async (req, res) => {
 });
 
 // PATCH - Atualizar apenas status
-app.patch('/api/ordens/:id/status', verifySession, async (req, res) => {
+app.patch('/api/ordens/:id/status', async (req, res) => {
     try {
         const { id } = req.params;
         const { status } = req.body;
 
+        if (!['aberta', 'fechada'].includes(status)) {
+            return res.status(400).json({ error: 'Status inválido' });
+        }
+
         const { data, error } = await supabase
             .from('ordens_compra')
-            .update({ 
-                status: status,
-                updated_at: new Date().toISOString()
-            })
+            .update({ status: status })
             .eq('id', id)
             .select()
             .single();
@@ -212,7 +215,7 @@ app.patch('/api/ordens/:id/status', verifySession, async (req, res) => {
 });
 
 // DELETE - Excluir ordem
-app.delete('/api/ordens/:id', verifySession, async (req, res) => {
+app.delete('/api/ordens/:id', async (req, res) => {
     try {
         const { id } = req.params;
 
@@ -238,13 +241,32 @@ app.get('/health', (req, res) => {
     res.json({ 
         status: 'OK', 
         timestamp: new Date().toISOString(),
-        service: 'Ordem de Compra API'
+        service: 'Ordem de Compra API',
+        supabase: process.env.SUPABASE_URL ? 'Configurado' : 'NÃO CONFIGURADO'
     });
+});
+
+// Rota raiz
+app.get('/', (req, res) => {
+    res.json({ 
+        message: 'API Ordem de Compra',
+        version: '1.0.0',
+        endpoints: {
+            health: '/health',
+            ordens: '/api/ordens'
+        }
+    });
+});
+
+// Tratamento de erros 404
+app.use((req, res) => {
+    res.status(404).json({ error: 'Rota não encontrada' });
 });
 
 // Iniciar servidor
 app.listen(PORT, () => {
     console.log(`✅ Servidor rodando na porta ${PORT}`);
-    console.log(`🌐 Ambiente: ${process.env.NODE_ENV || 'development'}`);
-    console.log(`📊 Supabase URL: ${process.env.SUPABASE_URL ? 'Configurado' : 'NÃO CONFIGURADO'}`);
+    console.log(`🌐 Ambiente: ${process.env.NODE_ENV || 'production'}`);
+    console.log(`📊 Supabase URL: ${process.env.SUPABASE_URL ? 'Configurado ✓' : 'NÃO CONFIGURADO ✗'}`);
+    console.log(`🔑 Service Role Key: ${process.env.SUPABASE_SERVICE_ROLE_KEY ? 'Configurado ✓' : 'NÃO CONFIGURADO ✗'}`);
 });
