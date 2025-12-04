@@ -15,9 +15,12 @@ if (!supabaseUrl || !supabaseKey) {
 const supabase = createClient(supabaseUrl, supabaseKey);
 console.log('✅ Supabase configurado:', supabaseUrl);
 
-// MIDDLEWARES
 app.use(cors({
-    origin: '*',
+    origin: [
+        'https://ordem-compra.onrender.com',
+        'http://localhost:3000'
+    ],
+    credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Session-Token']
 }));
