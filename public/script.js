@@ -15,6 +15,7 @@ let currentTab = 0;
 let isOnline = false;
 let sessionToken = null;
 let lastDataHash = '';
+let fornecedoresCache = {}; // Cache de fornecedores
 
 const tabs = ['tab-geral', 'tab-fornecedor', 'tab-pedido', 'tab-entrega', 'tab-pagamento'];
 
@@ -145,6 +146,9 @@ async function loadOrdens() {
         const data = await response.json();
         ordens = data;
         
+        // Atualizar cache de fornecedores
+        atualizarCacheFornecedores(data);
+        
         const newHash = JSON.stringify(ordens.map(o => o.id));
         if (newHash !== lastDataHash) {
             lastDataHash = newHash;
@@ -153,6 +157,144 @@ async function loadOrdens() {
     } catch (error) {
         console.error('❌ Erro ao carregar:', error);
     }
+}
+
+// ============================================
+// CACHE DE FORNECEDORES
+// ============================================
+function atualizarCacheFornecedores(ordens) {
+    fornecedoresCache = {};
+    
+    ordens.forEach(ordem => {
+        const razaoSocial = (ordem.razao_social || ordem.razaoSocial || '').trim().toUpperCase();
+        
+        if (razaoSocial && !fornecedoresCache[razaoSocial]) {
+            fornecedoresCache[razaoSocial] = {
+                razaoSocial: ordem.razao_social || ordem.razaoSocial,
+                nomeFantasia: ordem.nome_fantasia || ordem.nomeFantasia || '',
+                cnpj: ordem.cnpj || '',
+                enderecoFornecedor: ordem.endereco_fornecedor || ordem.enderecoFornecedor || '',
+                site: ordem.site || '',
+                contato: ordem.contato || '',
+                telefone: ordem.telefone || '',
+                email: ordem.email || ''
+            };
+        }
+    });
+    
+    console.log(`📋 Cache de fornecedores atualizado: ${Object.keys(fornecedoresCache).length} fornecedores`);
+}
+
+function buscarFornecedoresSimilares(termo) {
+    termo = termo.trim().toUpperCase();
+    if (termo.length < 2) return [];
+    
+    return Object.keys(fornecedoresCache)
+        .filter(key => key.includes(termo))
+        .map(key => fornecedoresCache[key])
+        .slice(0, 5); // Máximo 5 sugestões
+}
+
+function preencherDadosFornecedor(fornecedor) {
+    document.getElementById('razaoSocial').value = fornecedor.razaoSocial;
+    document.getElementById('nomeFantasia').value = fornecedor.nomeFantasia;
+    document.getElementById('cnpj').value = fornecedor.cnpj;
+    document.getElementById('enderecoFornecedor').value = fornecedor.enderecoFornecedor;
+    document.getElementById('site').value = fornecedor.site;
+    document.getElementById('contato').value = fornecedor.contato;
+    document.getElementById('telefone').value = fornecedor.telefone;
+    document.getElementById('email').value = fornecedor.email;
+    
+    // Remover sugestões
+    const suggestionsDiv = document.getElementById('fornecedorSuggestions');
+    if (suggestionsDiv) suggestionsDiv.remove();
+    
+    showToast('Dados do fornecedor preenchidos!', 'success');
+}
+
+function setupFornecedorAutocomplete() {
+    const razaoSocialInput = document.getElementById('razaoSocial');
+    if (!razaoSocialInput) return;
+    
+    // Remover listeners anteriores
+    const newInput = razaoSocialInput.cloneNode(true);
+    razaoSocialInput.parentNode.replaceChild(newInput, razaoSocialInput);
+    
+    newInput.addEventListener('input', function(e) {
+        const termo = e.target.value;
+        
+        // Remover sugestões antigas
+        let suggestionsDiv = document.getElementById('fornecedorSuggestions');
+        if (suggestionsDiv) suggestionsDiv.remove();
+        
+        if (termo.length < 2) return;
+        
+        const fornecedores = buscarFornecedoresSimilares(termo);
+        
+        if (fornecedores.length === 0) return;
+        
+        // Criar div de sugestões
+        suggestionsDiv = document.createElement('div');
+        suggestionsDiv.id = 'fornecedorSuggestions';
+        suggestionsDiv.style.cssText = `
+            position: absolute;
+            z-index: 1000;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            max-height: 300px;
+            overflow-y: auto;
+            width: 100%;
+            margin-top: 4px;
+        `;
+        
+        fornecedores.forEach(fornecedor => {
+            const item = document.createElement('div');
+            item.style.cssText = `
+                padding: 12px;
+                cursor: pointer;
+                border-bottom: 1px solid var(--border-color);
+                transition: background 0.2s;
+            `;
+            
+            item.innerHTML = `
+                <div style="font-weight: 600; color: var(--text-primary); margin-bottom: 4px;">
+                    ${fornecedor.razaoSocial}
+                </div>
+                <div style="font-size: 0.85rem; color: var(--text-secondary);">
+                    ${fornecedor.cnpj}${fornecedor.nomeFantasia ? ' | ' + fornecedor.nomeFantasia : ''}
+                </div>
+            `;
+            
+            item.addEventListener('mouseenter', () => {
+                item.style.background = 'var(--table-hover)';
+            });
+            
+            item.addEventListener('mouseleave', () => {
+                item.style.background = 'transparent';
+            });
+            
+            item.addEventListener('click', () => {
+                preencherDadosFornecedor(fornecedor);
+            });
+            
+            suggestionsDiv.appendChild(item);
+        });
+        
+        // Inserir depois do input
+        const formGroup = newInput.closest('.form-group');
+        formGroup.style.position = 'relative';
+        formGroup.appendChild(suggestionsDiv);
+    });
+    
+    // Fechar sugestões ao clicar fora
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.form-group')) {
+            const suggestionsDiv = document.getElementById('fornecedorSuggestions');
+            if (suggestionsDiv) suggestionsDiv.remove();
+        }
+    });
 }
 
 // ============================================
@@ -368,7 +510,12 @@ function openFormModal() {
 
     document.body.insertAdjacentHTML('beforeend', modalHTML);
     addItem();
-    setTimeout(() => document.getElementById('numeroOrdem')?.focus(), 100);
+    
+    // Configurar autocomplete de fornecedores
+    setTimeout(() => {
+        setupFornecedorAutocomplete();
+        document.getElementById('numeroOrdem')?.focus();
+    }, 100);
 }
 
 function closeFormModal(showCancelMessage = false) {
@@ -727,6 +874,11 @@ async function editOrdem(id) {
     `;
 
     document.body.insertAdjacentHTML('beforeend', modalHTML);
+    
+    // Configurar autocomplete de fornecedores
+    setTimeout(() => {
+        setupFornecedorAutocomplete();
+    }, 100);
     
     if (ordem.items && ordem.items.length > 0) {
         ordem.items.forEach(item => {
